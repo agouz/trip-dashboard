@@ -40,9 +40,10 @@
   .banner .meta{font-size:11.5px; color:var(--parchment-dim);}
 
   #countries{display:flex; flex-direction:column; gap:10px;}
-  .country{border:1px solid var(--hairline); border-radius:var(--radius); background:var(--ink-2); overflow:hidden;}
-  .country-head{display:flex; align-items:center; gap:12px; padding:14px; cursor:pointer;}
-  .country-flag{font-size:26px; line-height:1;}
+  .country{position:relative; border:1px solid var(--hairline); border-radius:var(--radius); background:var(--ink-2); overflow:hidden;}
+  .country::before{content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent, var(--hairline));}
+  .country-head{display:flex; align-items:center; gap:12px; padding:14px 14px 14px 18px; cursor:pointer;}
+  .country-flag{font-size:18px; line-height:1; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:var(--accent-soft, var(--ink-3)); border:1px solid var(--accent, var(--hairline)); flex-shrink:0;}
   .country-main{flex:1; min-width:0;}
   .country-name{font-size:15.5px; font-weight:700;}
   .country-dates{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--parchment-dim); margin-top:2px;}
@@ -51,12 +52,20 @@
   .status-bar i{width:5px; height:14px; border-radius:2px; display:block;}
   .chev{font-size:13px; color:var(--parchment-dim); transition:transform 0.2s ease;}
   .country.open .chev{transform:rotate(90deg);}
-  .country-body{display:none; padding:0 12px 14px; border-top:1px solid var(--hairline);}
+  .country-body{display:none; padding:0 12px 14px 18px; border-top:1px solid var(--hairline);}
   .country.open .country-body{display:block;}
+
+  .rail-wrap{margin-bottom:16px;}
+  .rail{display:flex; height:9px; border-radius:6px; overflow:hidden; gap:2px; position:relative;}
+  .rail-seg{height:100%; border-radius:2px; cursor:pointer; opacity:0.85; transition:opacity 0.15s ease;}
+  .rail-seg:active{opacity:1;}
+  .rail-marker{position:absolute; top:-4px; width:2px; height:17px; background:var(--parchment); border-radius:1px; pointer-events:none;}
+  .rail-caption{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--parchment-dim); margin-top:6px; text-align:center;}
+  .rail-caption b{color:var(--parchment);}
 
   .leg{position:relative; margin-top:10px; cursor:pointer;}
   .leg-card{background:var(--ink-3); border:1px solid var(--hairline); border-radius:10px; padding:11px 13px; position:relative; overflow:hidden;}
-  .leg-card::after{content:''; position:absolute; right:0; top:0; bottom:0; width:3px; background:var(--barcolor, var(--parchment-dim));}
+  .leg-card::after{content:''; position:absolute; right:0; top:0; bottom:0; width:4px; background:var(--barcolor, var(--parchment-dim));}
   .leg-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
   .leg-loc{font-size:13.5px; font-weight:600;}
   .leg-dates{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--parchment-dim); margin-top:2px;}
@@ -67,6 +76,7 @@
   .prio{font-size:9px; font-family:'IBM Plex Mono',monospace; margin-top:5px; opacity:0.75;}
 
   .booking-badge{font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--amber); margin-top:5px; opacity:0.85;}
+
 
   .sheet-tabs{display:flex; gap:6px; margin-bottom:14px;}
   .sheet-tab{flex:1; background:var(--ink-3); border:1px solid var(--hairline); color:var(--parchment-dim); font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:12px; padding:8px 0; border-radius:8px; cursor:pointer; text-align:center;}
@@ -132,6 +142,7 @@
   .country-cost-row:last-child{border-bottom:none;}
   .ccr-left{display:flex; align-items:center; gap:10px;}
   .ccr-flag{font-size:18px;}
+  .ccr-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
   .ccr-name{font-size:13px; font-weight:600; color:var(--parchment);}
   .ccr-amt{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--amber);}
   #costDetailPane{display:none; background:var(--ink-2); border:1px solid var(--amber); border-radius:var(--radius); padding:14px; margin-top:10px;}
@@ -222,6 +233,12 @@
     <div class="cd-box"><div class="cd-num" id="cdMins">--</div><div class="cd-label">min</div></div>
     <div class="cd-box"><div class="cd-num" id="cdSecs">--</div><div class="cd-label">sec</div></div>
   </div>
+
+  <div class="rail-wrap" id="railWrap">
+    <div class="rail" id="rail"></div>
+    <div class="rail-caption" id="railCaption"></div>
+  </div>
+
 
   <div class="maintabs">
     <button class="maintab active" id="mtItinerary" onclick="showMainTab('itinerary')">Trip</button>
@@ -350,14 +367,14 @@
 
 <script>
 const COUNTRY_META = {
-  USA:{flag:"🇺🇸",name:"United States"},
-  Mexico:{flag:"🇲🇽",name:"Mexico"},
-  Guatemala:{flag:"🇬🇹",name:"Guatemala"},
-  Peru:{flag:"🇵🇪",name:"Peru"},
-  Bolivia:{flag:"🇧🇴",name:"Bolivia"},
-  Argentina:{flag:"🇦🇷",name:"Argentina"},
-  Brazil:{flag:"🇧🇷",name:"Brazil"},
-  China:{flag:"🇨🇳",name:"China"}
+  USA:{flag:"🇺🇸",name:"United States",accent:"#E0A93B"},
+  Mexico:{flag:"🇲🇽",name:"Mexico",accent:"#D9714B"},
+  Guatemala:{flag:"🇬🇹",name:"Guatemala",accent:"#5FA876"},
+  Peru:{flag:"🇵🇪",name:"Peru",accent:"#C1463F"},
+  Bolivia:{flag:"🇧🇴",name:"Bolivia",accent:"#3FB8B0"},
+  Argentina:{flag:"🇦🇷",name:"Argentina",accent:"#5C9BD9"},
+  Brazil:{flag:"🇧🇷",name:"Brazil",accent:"#7FBF4D"},
+  China:{flag:"🇨🇳",name:"China",accent:"#A8729E"}
 };
 
 const PRIO_RANK = {"\ud83d\udea8 High":1,"\ud83d\udfe1 Medium":2,"\ud83d\udfe2 Low":3,"\ud83d\udfe2 watch":3.5,null:4};
@@ -449,19 +466,19 @@ function renderCountries(){
   const groups = groupByCountry();
   const el = document.getElementById('countries');
   el.innerHTML = groups.map(function(g,i){
-    const meta = COUNTRY_META[g.country] || {flag:"🏳️",name:g.country};
+    const meta = COUNTRY_META[g.country] || {flag:"🏳️",name:g.country,accent:"#B9B2A0"};
     const bars = g.legs.map(function(l){ return '<i style="background:'+dotColor(l.status)+'"></i>'; }).join('');
     const legsHtml = g.legs.map(function(l){
       const bkCount = (l.bookings && l.bookings.length) ? l.bookings.length : 0;
       return '<div class="leg" onclick="event.stopPropagation(); openSheet('+l.id+')">'
-        + '<div class="leg-card" style="--barcolor:'+dotColor(l.status)+'">'
+        + '<div class="leg-card" style="--barcolor:'+meta.accent+'">'
         + '<div class="leg-top"><div><div class="leg-loc">'+l.loc+'</div>'
         + '<div class="leg-dates">'+l.dates+'</div></div>'+statusPill(l.status)+'</div>'
         + (l.priority ? '<div class="prio mono">priority: '+l.priority+'</div>' : '')
         + (bkCount ? '<div class="booking-badge">🧾 '+bkCount+' booking'+(bkCount>1?'s':'')+'</div>' : '')
         + '</div></div>';
     }).join('');
-    return '<div class="country" id="country-'+i+'">'
+    return '<div class="country" id="country-'+i+'" style="--accent:'+meta.accent+'; --accent-soft:'+meta.accent+'26;">'
       + '<div class="country-head" onclick="toggleCountry('+i+')">'
       + '<div class="country-flag">'+meta.flag+'</div>'
       + '<div class="country-main"><div class="country-name">'+meta.name+'</div>'
@@ -473,6 +490,54 @@ function renderCountries(){
 
 function toggleCountry(i){
   document.getElementById('country-'+i).classList.toggle('open');
+}
+
+function jumpToCountry(i){
+  showMainTab('itinerary');
+  document.getElementById('mtItinerary').classList.add('active');
+  const el = document.getElementById('country-'+i);
+  if(!el) return;
+  el.classList.add('open');
+  el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function renderRail(){
+  const groups = groupByCountry();
+  const rail = document.getElementById('rail');
+  const caption = document.getElementById('railCaption');
+  if(!groups.length){ rail.innerHTML=''; caption.textContent=''; return; }
+
+  const NOMINAL_OPEN_DAYS = 14; // for legs with no end_date yet (e.g. China TBD)
+  const spans = groups.map(function(g){
+    const firstLeg = g.legs[0], lastLeg = g.legs[g.legs.length-1];
+    const start = firstLeg.start_date ? new Date(firstLeg.start_date+'T00:00:00') : null;
+    let end = lastLeg.end_date ? new Date(lastLeg.end_date+'T00:00:00') : null;
+    if(!end && start) end = new Date(start.getTime() + NOMINAL_OPEN_DAYS*86400000);
+    const days = (start && end) ? Math.max(1, Math.round((end-start)/86400000)) : 1;
+    return {country: g.country, start: start, end: end, days: days};
+  });
+  const totalDays = spans.reduce(function(s,x){ return s+x.days; }, 0);
+  const overallStart = spans[0].start;
+  const overallEnd = spans[spans.length-1].end;
+
+  rail.innerHTML = spans.map(function(s, i){
+    const meta = COUNTRY_META[s.country] || {accent:"#B9B2A0"};
+    const pct = (s.days/totalDays*100).toFixed(2);
+    return '<div class="rail-seg" style="width:'+pct+'%; background:'+meta.accent+';" onclick="jumpToCountry('+i+')"></div>';
+  }).join('');
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  if(overallStart && overallEnd && today >= overallStart && today <= overallEnd){
+    const pct = ((today-overallStart)/(overallEnd-overallStart)*100).toFixed(2);
+    rail.insertAdjacentHTML('beforeend', '<div class="rail-marker" style="left:'+pct+'%;"></div>');
+    const here = DATA.find(function(d){ return d.start_date && d.end_date && (new Date().toISOString().slice(0,10))>=d.start_date && (new Date().toISOString().slice(0,10))<=d.end_date; });
+    caption.innerHTML = here ? ('You are here: <b>'+here.loc+'</b>') : '';
+  }else if(overallStart && today < overallStart){
+    const daysToGo = Math.ceil((overallStart-today)/86400000);
+    caption.innerHTML = '<b>'+daysToGo+' days</b> until departure';
+  }else{
+    caption.innerHTML = '';
+  }
 }
 
 function bkStatusPill(s){
@@ -645,8 +710,8 @@ function renderCosts(){
 
   const countryOrder = ["USA","Mexico","Guatemala","Peru","Bolivia","Argentina","Brazil","China","General"];
   const countryHtml = countryOrder.filter(function(c){ return byCountry[c]; }).map(function(c){
-    const meta = COUNTRY_META[c] || {flag:"📋",name:c};
-    return '<div class="country-cost-row" onclick="showCostDetail(\'country\',\''+c+'\')"><div class="ccr-left"><div class="ccr-flag">'+meta.flag+'</div><div class="ccr-name">'+meta.name+'</div></div>'
+    const meta = COUNTRY_META[c] || {flag:"📋",name:c,accent:"#B9B2A0"};
+    return '<div class="country-cost-row" onclick="showCostDetail(\'country\',\''+c+'\')"><div class="ccr-left"><div class="ccr-dot" style="background:'+meta.accent+';"></div><div class="ccr-flag">'+meta.flag+'</div><div class="ccr-name">'+meta.name+'</div></div>'
       + '<div class="ccr-amt">'+fmtAud(byCountry[c])+'</div></div>';
   }).join('');
 
@@ -1015,6 +1080,7 @@ async function initDashboard(){
   document.getElementById('dayCount').textContent = bookedCount+'/'+DATA.length+' legs locked';
   renderBanner();
   renderCountries();
+  renderRail();
   renderCosts();
   renderPrep();
   renderOther();
