@@ -262,151 +262,46 @@ const COUNTRY_META = {
   China:{flag:"🇨🇳",name:"China"}
 };
 
-const SEED = [
- {id:1,country:"USA",loc:"New York City",start:"14 Jul",end:"21 Jul",dates:"14–21 Jul",status:"partial",priority:null,
-  plan:"Statue of Liberty Crown (18 Jul 9AM), Central Park, Brooklyn Bridge, World Cup atmosphere.",
-  booking:"Broadway optional; book a late-night show while in NYC. Live show research still open.",
-  notes:"Hostel switch rejected — saving wasn't enough vs. losing privacy in week one. Keep US border docs offline; simple answer only, don't volunteer the itinerary PDF.",
-  bookings:[
-    {cat:"✈️",title:"Sydney → New York",provider:"Qantas (QF3 via Auckland)",cost:"$1,313.84",status:"paid",note:"Ticket 081-2382136774, Economy Sale"},
-    {cat:"✈️",title:"New York → Los Angeles",provider:"Alaska Airlines",cost:"$372",status:"paid",note:"Flight 287, Seat 20C, EWR 7:59PM → LAX 11:07PM"},
-    {cat:"🏨",title:"NYC Apartment",provider:"Booking.com",cost:"$1,053.03",status:"paid",note:"302 Paterson Plank Rd, Jersey City NJ"},
-    {cat:"🎟️",title:"Statue of Liberty Crown Reserve",provider:"Statue City Cruises",cost:"$41",status:"paid",note:"Crown Access, security check-in 8:30AM, 18 Jul"}
-  ]},
- {id:2,country:"USA",loc:"Los Angeles",start:"21 Jul",end:"25 Jul",dates:"21–25 Jul",status:"partial",priority:null,
-  plan:"Warner Bros Tour (24 Jul 9AM), Griffith Observatory, Hollywood Sign, Santa Monica/Venice.",
-  booking:"Live shows/comedy/music still open.",
-  notes:"Switched to Hollywood hostel dorm for location + savings — no car in LA, so parking wasn't a factor.",
-  bookings:[
-    {cat:"🏨",title:"Samesun Hollywood Hotel & Hostel",provider:"Booking.com",cost:"$250",status:"confirmed",note:"6-bed mixed dorm, Hollywood Blvd"},
-    {cat:"🚗",title:"Rental car: LA → Las Vegas",provider:"Auto Europe / Hertz",cost:"$414.99",status:"paid",note:"Kia K4 or similar · pickup LA West Adams 25 Jul 10:00 · drop Vegas Airport 29 Jul 02:00"},
-    {cat:"🎟️",title:"Warner Bros Studio Tour Hollywood — Studio Tour Plus",provider:"Warner Bros.",cost:"$0",status:"confirmed",note:"Gift ticket, Order #1897451 · rescheduled to 24 Jul 9:00AM, confirmed by WB · updated tickets sent via email"}
-  ]},
- {id:3,country:"USA",loc:"Carmel-by-the-Sea",start:"25 Jul",end:"26 Jul",dates:"25–26 Jul",status:"booked",priority:null,
-  plan:"Coastal stop, relax, overnight.", booking:"—", notes:"Sleep moved inland to Salinas; scenic day preserved, avoid late-night wandering there.",
-  bookings:[{cat:"🏨",title:"Salinas overnight (White urban home)",provider:"Airbnb",cost:"$114.82",status:"confirmed",note:"Private room, Salinas — sleep stop before Yosemite"}]},
- {id:4,country:"USA",loc:"Yosemite",start:"26 Jul",end:"29 Jul",dates:"26–29 Jul",status:"booked",priority:"🟢 watch",
-  plan:"Yosemite Valley, El Capitan, waterfalls, hikes.",
-  booking:"Half Dome lottery opens 26 Jul for the 28 Jul hike — permit not secured yet. Decide on the day based on weather/energy.",
-  notes:"Tent cabin accepted: ~50min daily drive tolerated for ~$800 saving. Half Dome not emotionally locked in.",
-  bookings:[{cat:"🏨",title:"Yosemite tent cabin",provider:"Airbnb",cost:"$567.51",status:"confirmed",note:"Queen bed, mini fridge, self check-in"}]},
- {id:5,country:"USA",loc:"Las Vegas",start:"29 Jul",end:"31 Jul",dates:"29–31 Jul",status:"booked",priority:null,
-  plan:"Arrive, Strip walk, pool, relax.", booking:"—", notes:"",
-  bookings:[
-    {cat:"🏨",title:"Flamingo Las Vegas Hotel & Casino",provider:"Booking.com",cost:"$183.40",status:"confirmed"},
-    {cat:"✈️",title:"Las Vegas → Mexico City",provider:"VivaAerobus",cost:"$448",status:"paid",note:"Non-stop · 3:10PM LAS → 8:05PM MEX · 1 checked bag"}
-  ]},
- {id:6,country:"Mexico",loc:"Mexico City",start:"1 Aug",end:"5 Aug",dates:"1–5 Aug",status:"partial",priority:null,
-  plan:"Roma/Condesa, street food, Chapultepec Park, Teotihuacan, buffer day.",
-  booking:"Teotihuacan tour.", notes:"",
-  bookings:[
-    {cat:"🏨",title:"Segovia Regency",provider:"Booking.com",cost:"$266",status:"confirmed"},
-    {cat:"✈️",title:"Mexico City → Oaxaca",provider:"Aeromexico",cost:"$133.55",status:"paid",note:"Direct · 4:45PM → 5:57PM"}
-  ]},
- {id:7,country:"Mexico",loc:"Oaxaca",start:"5 Aug",end:"10 Aug",dates:"5–10 Aug",status:"partial",priority:null,
-  plan:"Centro walks, markets, food, mezcal experience, Hierve el Agua, buffer day.",
-  booking:"Mezcal tour still open.", notes:"Flight chosen over bus to protect energy. Hostel picked for centrality + reviews over pure price.",
-  bookings:[
-    {cat:"🏨",title:"Hostal Mixteco Naba Nandoo",provider:"Booking.com",cost:"$193.09",status:"confirmed",note:"5 nights, central Oaxaca City"},
-    {cat:"✈️",title:"Oaxaca → Guatemala City",provider:"Aeromexico",cost:"$475.69",status:"paid",note:"Via Mexico City · 1 stop · 7h51m"}
-  ]},
- {id:8,country:"Guatemala",loc:"Transit: Oaxaca → Antigua",start:"10 Aug",end:"10 Aug",dates:"10 Aug",status:"booked",priority:null,
-  plan:"Oaxaca → Mexico City → Guatemala City → Antigua.", booking:"—",
-  notes:"4h20 MEX layover chosen deliberately over a tight 1h35 connection. Checked bag accepted despite cost.",
-  bookings:[{cat:"🚐",title:"Guatemala City airport → Antigua transfer",provider:"GetYourGuide",cost:"$35",status:"reserved",note:"Shared transfer, 1 adult · charged 8 Aug"}]},
- {id:9,country:"Guatemala",loc:"Antigua",start:"11 Aug",end:"14 Aug",dates:"11–14 Aug",status:"booked",priority:null,
-  plan:"Colonial streets, cafés, volcano views, rooftop restaurants.", booking:"—",
-  notes:"Airport transfer pre-booked to avoid improvising on arrival.",
-  bookings:[{cat:"🏨",title:"Hotel La Sin Ventura",provider:"Booking.com",cost:"$166",status:"confirmed",note:"Housing Capsule · charged 8 Aug"}]},
- {id:10,country:"Guatemala",loc:"Acatenango Camp",start:"14 Aug",end:"15 Aug",dates:"14–15 Aug",status:"booked",priority:null,
-  plan:"Volcano hike + overnight camping, Fuego eruption views.",
-  booking:"Gear rental likely: warm jacket, gloves, beanie, headlamp, poles. Fuego add-on decided at camp, not pre-booked.",
-  notes:"Operator chosen on reviews + warmth/safety/pacing, not lowest price. Base camp alone may give good eruption views.",
-  bookings:[{cat:"🎟️",title:"Acatenango Volcano Overnight Tour",provider:"GetYourGuide / Tours & Activities SA",cost:"$128",status:"reserved",note:"2D/1N, English guide · excl. park entry, gear, Fuego add-on"}]},
- {id:11,country:"Guatemala",loc:"Antigua (recovery)",start:"15 Aug",end:"16 Aug",dates:"15–16 Aug",status:"booked",priority:null,
-  plan:"Descend, recover, massage, slow day.", booking:"—",
-  notes:"Spa night is a deliberate exception to cost-cutting — comfort after a hard activity is worth it.",
-  bookings:[{cat:"🏨",title:"Indian Palace Hotel Boutique Spa",provider:"Booking.com",cost:"$180",status:"confirmed",note:"Deluxe Room — post-Acatenango recovery"}]},
- {id:12,country:"Guatemala",loc:"Lake Atitlán",start:"16 Aug",end:"18 Aug",dates:"16–18 Aug",status:"open",priority:"🟢 Low",
-  plan:"Boat between villages, San Marcos / Panajachel, lake views.",
-  booking:"Transport + hotel not booked. Base town not finalised.", notes:""},
- {id:13,country:"Peru",loc:"Transit: Atitlán → Lima",start:"18 Aug",end:"18 Aug",dates:"18 Aug",status:"open",priority:"🚨 High",
-  plan:"Lake Atitlán → Guatemala City → Lima.",
-  booking:"Flight not booked. Copa vs Avianca comparison started — Copa shorter/earlier unless Avianca is clearly cheaper with bags included.",
-  notes:"Treated as the critical connecting leg into the Peru section. Plan: pause for a budget review after this is locked."},
- {id:14,country:"Peru",loc:"Lima",start:"19 Aug",end:"21 Aug",dates:"19–21 Aug",status:"open",priority:null,
-  plan:"Miraflores, Barranco, coastal walks, soft transition into Peru.",
-  booking:"Hotel not booked.", notes:""},
- {id:15,country:"Peru",loc:"Cusco",start:"21 Aug",end:"23 Aug",dates:"21–23 Aug",status:"open",priority:"🚨 High",
-  plan:"Arrive, acclimatise, light walks, old town.",
-  booking:"Lima → Cusco flight not booked. Book morning/midday — avoid stacking altitude + weather risk same day.", notes:""},
- {id:16,country:"Peru",loc:"Sacred Valley / Ollantaytambo",start:"23 Aug",end:"25 Aug",dates:"23–25 Aug",status:"open",priority:"🟡 Medium",
-  plan:"Cusco → Chinchero → Moray → Maras Salt Mines → Ollantaytambo drop-off (tour, not train/bus).",
-  booking:"Tour not booked. Confirm luggage allowed and whether ending in Ollantaytambo skips Pisac. Re-check pricing — June offer didn't apply to August.", notes:"Preferred as one-way drop-off tour over round-trip to avoid backtracking.",
-  bookings:[{cat:"🚆",title:"PeruRail Vistadome: Ollantaytambo → Aguas Calientes",provider:"PeruRail",cost:"$107",status:"paid",note:"Departs 12:55, 25 Aug"}]},
- {id:17,country:"Peru",loc:"Aguas Calientes",start:"25 Aug",end:"25 Aug",dates:"25 Aug",status:"booked",priority:null,
-  plan:"Train in, relax, prepare for Machu Picchu.", booking:"—", notes:"Hydroelectric route rejected — too much fatigue for the saving.",
-  bookings:[{cat:"🏨",title:"Viajeros Centro",provider:"Booking.com",cost:"$52",status:"confirmed",note:"Double Room, Aguas Calientes"}]},
- {id:18,country:"Peru",loc:"Machu Picchu + Cusco",start:"26 Aug",end:"26 Aug",dates:"26 Aug",status:"booked",priority:null,
-  plan:"Machu Picchu Route 1B Upper Terrace, return train to Cusco.", booking:"—",
-  notes:"Bus booked rather than walking up, to save energy for the site itself.",
-  bookings:[
-    {cat:"🎟️",title:"Machu Picchu Route 1B Upper Terrace",provider:"Ministerio de Cultura Peru",cost:"$65",status:"paid"},
-    {cat:"🚌",title:"Machu Picchu Bus Round Trip",provider:"BusConsettur",cost:"$54",status:"paid"},
-    {cat:"🚆",title:"PeruRail Vistadome: Machu Picchu → Cusco",provider:"PeruRail",cost:"$217",status:"paid",note:"Departs 18:20, 26 Aug"}
-  ]},
- {id:19,country:"Peru",loc:"Cusco (buffer)",start:"27 Aug",end:"27 Aug",dates:"27 Aug",status:"booked",priority:null,
-  plan:"Recovery / flex day.", booking:"—", notes:"",
-  bookings:[{cat:"🏨",title:"Cusco City Centre hostel",provider:"Booking.com",cost:"$50",status:"confirmed",note:"2 nights, 26–28 Aug"}]},
- {id:20,country:"Bolivia",loc:"La Paz",start:"28 Aug",end:"31 Aug",dates:"28–31 Aug",status:"open",priority:"🚨 High",
-  plan:"Acclimatise, Mi Teleférico, Valley of the Moon, Witches' Market.",
-  booking:"Cusco → La Paz flight not booked — runs only 4x/week, verify day-of-week.", notes:""},
- {id:21,country:"Bolivia",loc:"Uyuni",start:"31 Aug",end:"1 Sep",dates:"31 Aug–1 Sep",status:"open",priority:"🚨 High",
-  plan:"Arrive, rest, prep for salt flats.", booking:"Flight or overnight bus not booked.", notes:""},
- {id:22,country:"Bolivia",loc:"Uyuni Salt Flats",start:"1 Sep",end:"3 Sep",dates:"1–3 Sep",status:"open",priority:"🟡 Medium",
-  plan:"2-day salt flats tour, sunset, star gazing.",
-  booking:"Tour operator not booked — pick for comfort/safety/group size, not cheapest.",
-  notes:"Bolivia is the most cash-dependent leg — bring clean, undamaged USD bills; ATMs unreliable."},
- {id:23,country:"Argentina",loc:"Transit: Uyuni → Buenos Aires",start:"3 Sep",end:"3 Sep",dates:"3 Sep",status:"open",priority:"🚨 High",
-  plan:"Uyuni → La Paz/Santa Cruz → Buenos Aires.",
-  booking:"Flight not booked — check if a Santa Cruz overnight is needed.", notes:""},
- {id:24,country:"Argentina",loc:"Buenos Aires",start:"4 Sep",end:"7 Sep",dates:"4–7 Sep",status:"open",priority:null,
-  plan:"Walkable neighbourhoods, cafés, easy reset after Bolivia.",
-  booking:"Hotel not booked.", notes:"Argentina's parallel exchange-rate advantage is gone since April 2025 — card use is now practical."},
- {id:25,country:"Argentina",loc:"El Calafate / Patagonia",start:"7 Sep",end:"11 Sep",dates:"7–11 Sep",status:"open",priority:"🚨 High",
-  plan:"Perito Moreno Glacier, scenic Patagonia ending.",
-  booking:"Flight + hotel + glacier day not booked.", notes:""},
- {id:26,country:"Argentina",loc:"Puerto Iguazú (AR side)",start:"11 Sep",end:"13 Sep",dates:"11–13 Sep",status:"open",priority:"🚨 High",
-  plan:"Argentina side of Iguazú Falls.", booking:"Flight + hotel + park entry not booked.", notes:"Iguazú positioning relative to BA still being finalised."},
- {id:27,country:"Brazil",loc:"Foz do Iguaçu (BR side)",start:"13 Sep",end:"13 Sep",dates:"13 Sep",status:"open",priority:"🟡 Medium",
-  plan:"Brazil side panoramic views, Itaipu Dam optional.",
-  booking:"Border transfer + hotel + park entry not booked.", notes:"Brazil's 3.5% IOF tax applies to all foreign card purchases regardless of card."},
- {id:28,country:"Brazil",loc:"Rio de Janeiro",start:"14 Sep",end:"18 Sep",dates:"14–18 Sep",status:"open",priority:"🚨 High",
-  plan:"Christ the Redeemer, Sugarloaf, beach time, hang gliding.",
-  booking:"Flight + hotel + hang gliding not booked.", notes:""},
- {id:29,country:"Brazil",loc:"Amazon / Manaus",start:"18 Sep",end:"22 Sep",dates:"18–22 Sep",status:"open",priority:"🚨 High",
-  plan:"Amazon rainforest lodge experience.",
-  booking:"Flight + lodge package not booked. Target 3 nights, 2 only if pricing forces it.",
-  notes:"Malaria meds start 1 day before arrival, continue 7 days after — recalculate exact dates once this leg is locked."},
- {id:30,country:"Brazil",loc:"São Paulo",start:"22 Sep",end:"25 Sep",dates:"22–25 Sep",status:"open",priority:"🟡 Medium",
-  plan:"Transit-friendly buffer — Avenida Paulista, Ibirapuera Park.",
-  booking:"Flight + hotel not booked.", notes:"Exit-hub choice (São Paulo vs Rio vs BA vs Santiago) is a major hidden cost lever — not yet compared."},
- {id:31,country:"China",loc:"China — TBD",start:"25 Sep",end:"TBD",dates:"25 Sep onward",status:"open",priority:"🟡 Medium",
-  plan:"Stopover or skip, then onward to Sydney.",
-  booking:"Decision not made. Default lean: drop China unless return flights are unusually cheap — keeps the AUD $20k budget target realistic.",
-  notes:"Biggest single cost-reduction lever on the whole trip ($5k–$8k AUD)."}
-];
-
-const PRIO_RANK = {"🚨 High":1,"🟡 Medium":2,"🟢 Low":3,"🟢 watch":3.5,null:4};
+const PRIO_RANK = {"\ud83d\udea8 High":1,"\ud83d\udfe1 Medium":2,"\ud83d\udfe2 Low":3,"\ud83d\udfe2 watch":3.5,null:4};
 let DATA = [];
+let GENERAL_COSTS = [];
 
 async function loadData(){
   try{
-    const r = await window.storage.get('itinerary_v3', false);
-    DATA = JSON.parse(r.value);
+    const legs = await sb('legs?select=*&order=sort_order.asc');
+    const bookingsRaw = await sb('bookings?select=*');
+    const byLeg = {};
+    const general = [];
+    bookingsRaw.forEach(function(b){
+      const item = {cat:b.cat, title:b.title, provider:b.provider, cost:b.cost, status:b.status, note:b.note};
+      if(b.leg_id === null){
+        general.push(item);
+      }else{
+        if(!byLeg[b.leg_id]) byLeg[b.leg_id] = [];
+        byLeg[b.leg_id].push(item);
+      }
+    });
+    DATA = legs.map(function(l){
+      return {
+        id: l.id,
+        country: l.country,
+        loc: l.loc,
+        start: l.start_label,
+        end: l.end_label,
+        dates: l.dates_display,
+        status: l.status,
+        priority: l.priority,
+        plan: l.plan,
+        booking: l.booking_needed,
+        notes: l.notes,
+        bookings: byLeg[l.id] || []
+      };
+    });
+    GENERAL_COSTS = general;
   }catch(e){
-    DATA = SEED;
-    try{ await window.storage.set('itinerary_v3', JSON.stringify(SEED), false); }catch(e2){}
+    showSaveStatus('error loading trip data: ' + (e && e.message ? e.message : String(e)));
+    DATA = [];
+    GENERAL_COSTS = [];
   }
 }
 
@@ -533,14 +428,6 @@ document.getElementById('closeSheet').onclick = function(){ document.getElementB
 document.getElementById('overlay').onclick = function(e){ if(e.target.id==='overlay') e.currentTarget.style.display='none'; };
 
 /* ============ COSTS ============ */
-const GENERAL_COSTS = [
-  {cat:"📄",title:"US ESTA",provider:"U.S. Customs and Border Protection",cost:"$62.97",status:"paid",note:"Required before US entry"},
-  {cat:"📄",title:"Brazil eVisa",provider:"VFS Global",cost:"$113",status:"paid",note:"Australian passport, tourist eVisa"},
-  {cat:"📄",title:"Travel insurance",provider:"Cover-More / CBA Smart Awards",cost:"$0",status:"paid",note:"Activated free via Smart Awards card, whole trip"},
-  {cat:"📄",title:"Travel health appointment & vaccinations",provider:"Travel doctor / clinic",cost:"$300",status:"paid",note:"Hep A + yellow fever; malaria/altitude meds advice"},
-  {cat:"💊",title:"Malaria medication",provider:"Pharmacy",cost:"$130",status:"paid",note:"For Amazon/Manaus leg — start 1 day before arrival, continue 7 days after"}
-];
-
 const ICON_CATEGORY = {"🏨":"Accommodation","✈️":"Flights","🎟️":"Activities & Tours","🚆":"Transport","🚌":"Transport","🚐":"Transport","🚗":"Transport","📄":"Documents & Health","💊":"Documents & Health"};
 
 function parseCost(str){
@@ -696,9 +583,14 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 async function sb(path, options){
   options = options || {};
+  let authHeader = 'Bearer ' + SUPABASE_KEY;
+  try{
+    const { data: { session } } = await authClient.auth.getSession();
+    if(session && session.access_token) authHeader = 'Bearer ' + session.access_token;
+  }catch(e){ /* fall back to anon key for unauthenticated reads */ }
   const headers = Object.assign({
     'apikey': SUPABASE_KEY,
-    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Authorization': authHeader,
     'Content-Type': 'application/json'
   }, options.headers || {});
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, Object.assign({}, options, {headers: headers}));
