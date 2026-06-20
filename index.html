@@ -81,6 +81,13 @@
   .pill.confirmed{background:rgba(77,122,149,0.18); color:var(--slate); border:1px solid rgba(77,122,149,0.4);}
   .pill.reserved{background:rgba(227,163,59,0.18); color:var(--amber); border:1px solid rgba(227,163,59,0.4);}
   .bk-empty{font-size:12px; color:var(--parchment-dim); text-align:center; padding:18px 0;}
+  .fd-hero{display:flex; align-items:center; justify-content:space-between; background:var(--ink); border:1px solid var(--hairline); border-radius:10px; padding:12px 10px; margin-bottom:10px;}
+  .fd-hero-side{flex:1; text-align:center;}
+  .fd-hero-time{font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:700; color:var(--parchment); line-height:1.1;}
+  .fd-hero-port{font-size:10px; color:var(--parchment-dim); margin-top:4px; line-height:1.3;}
+  .fd-hero-mid{flex:0 0 auto; padding:0 8px; text-align:center;}
+  .fd-hero-arrow{color:var(--amber); font-size:14px;}
+  .fd-hero-dur{font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--parchment-dim); margin-top:2px; white-space:nowrap;}
 
   #overlay{position:fixed; inset:0; background:rgba(10,15,19,0.6); display:none; align-items:flex-end; z-index:50;}
   #sheet{background:var(--ink-2); width:100%; max-width:520px; margin:0 auto; border-radius:18px 18px 0 0; padding:20px 18px 28px; border-top:1px solid var(--hairline); max-height:82vh; overflow-y:auto; position:relative;}
@@ -248,6 +255,7 @@
     <div class="add-type-tabs">
       <button class="add-type-tab active" id="addTypePacking" onclick="switchAddType('packing')">Packing Item</button>
       <button class="add-type-tab" id="addTypePrep" onclick="switchAddType('prep')">Prep Task</button>
+      <button class="add-type-tab" id="addTypeCost" onclick="switchAddType('cost')">Cost</button>
     </div>
 
     <div id="addFieldsPacking">
@@ -273,6 +281,42 @@
       <div class="add-field">
         <label>Task</label>
         <input id="addPrepTextInput" type="text" placeholder="e.g. Renew driver's licence">
+      </div>
+    </div>
+
+    <div id="addFieldsCost" style="display:none;">
+      <div class="add-field">
+        <label>Category</label>
+        <select id="addCostCatInput">
+          <option value="🏨">Accommodation</option>
+          <option value="✈️">Flights</option>
+          <option value="🎟️">Activities & Tours</option>
+          <option value="🚆">Transport</option>
+          <option value="📄">Documents & Health</option>
+          <option value="💰">Other</option>
+        </select>
+      </div>
+      <div class="add-field">
+        <label>Amount (AUD)</label>
+        <input id="addCostAmountInput" type="number" inputmode="decimal" placeholder="e.g. 45">
+      </div>
+      <div class="add-field">
+        <label>Country</label>
+        <select id="addCostCountryInput">
+          <option value="USA">🇺🇸 United States</option>
+          <option value="Mexico">🇲🇽 Mexico</option>
+          <option value="Guatemala">🇬🇹 Guatemala</option>
+          <option value="Peru">🇵🇪 Peru</option>
+          <option value="Bolivia">🇧🇴 Bolivia</option>
+          <option value="Argentina">🇦🇷 Argentina</option>
+          <option value="Brazil">🇧🇷 Brazil</option>
+          <option value="China">🇨🇳 China</option>
+          <option value="General">📋 General</option>
+        </select>
+      </div>
+      <div class="add-field">
+        <label>Comment (optional)</label>
+        <input id="addCostNoteInput" type="text" placeholder="e.g. Taxi to airport">
       </div>
     </div>
 
@@ -346,6 +390,8 @@ async function loadData(){
         start: l.start_label,
         end: l.end_label,
         dates: l.dates_display,
+        start_date: l.start_date,
+        end_date: l.end_date,
         status: l.status,
         priority: l.priority,
         plan: l.plan,
@@ -468,9 +514,21 @@ function renderFlightDetail(fd){
   if(fd.baggage_policy) rows.push(['Baggage', fd.baggage_policy]);
   if(fd.checkin_notes) rows.push(['Check-in', fd.checkin_notes]);
   if(fd.public_notes) rows.push(['Notes', fd.public_notes]);
-  return rows.map(function(r){
+  const hero = (fd.departure_time || fd.arrival_time) ? (
+    '<div class="fd-hero">'
+      + '<div class="fd-hero-side"><div class="fd-hero-time">'+(fd.departure_time||'—')+'</div><div class="fd-hero-port">'+(shortPort(fd.departure_airport))+'</div></div>'
+      + '<div class="fd-hero-mid"><div class="fd-hero-arrow">✈️ →</div>'+(fd.duration ? '<div class="fd-hero-dur">'+fd.duration+'</div>' : '')+'</div>'
+      + '<div class="fd-hero-side"><div class="fd-hero-time">'+(fd.arrival_time||'—')+'</div><div class="fd-hero-port">'+(shortPort(fd.arrival_airport))+'</div></div>'
+    + '</div>'
+  ) : '';
+  return hero + rows.map(function(r){
     return '<div style="margin-bottom:8px;"><div class="mono" style="font-size:9px; text-transform:uppercase; letter-spacing:0.08em; color:var(--amber); margin-bottom:2px;">'+r[0]+'</div><div style="font-size:12px; line-height:1.5;">'+r[1]+'</div></div>';
   }).join('');
+}
+function shortPort(s){
+  if(!s) return '';
+  const m = s.match(/\(([A-Z]{3,4})\)/);
+  return m ? m[1] : s.split('—')[0].split(',')[0].trim();
 }
 
 function toggleFlightDetail(bookingId){
@@ -592,7 +650,8 @@ function renderCosts(){
   }).join('');
 
   el.innerHTML =
-    '<div class="cost-hero"><div class="amt">'+fmtAud(sum.total)+'</div><div class="lbl">total tracked so far</div></div>'
+    '<button class="prep-fab" onclick="openAddModal(\'cost\')">+</button>'
+    + '<div class="cost-hero"><div class="amt">'+fmtAud(sum.total)+'</div><div class="lbl">total tracked so far</div></div>'
     + '<div class="cost-split">'
       + '<div class="cs-box"><div class="cs-amt" style="color:var(--moss)">'+fmtAud(sum.paid)+'</div><div class="cs-lbl">paid</div></div>'
       + '<div class="cs-box"><div class="cs-amt" style="color:var(--slate)">'+fmtAud(sum.confirmed)+'</div><div class="cs-lbl">confirmed,<br>unpaid</div></div>'
@@ -842,18 +901,38 @@ function renderPrep(){
 function toggleMisc2(id){ document.getElementById(id).classList.toggle('open'); }
 
 let addModalType = 'packing';
-function openAddModal(){
+function openAddModal(defaultType){
   document.getElementById('addModalOverlay').style.display = 'flex';
+  switchAddType(defaultType || 'packing');
 }
 function closeAddModal(){
   document.getElementById('addModalOverlay').style.display = 'none';
+}
+function getCurrentLeg(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  let match = DATA.find(function(d){ return d.start_date && d.end_date && todayStr>=d.start_date && todayStr<=d.end_date; });
+  if(!match){
+    // open-ended leg (e.g. China TBD with no end_date) or before/after trip — fall back to nearest
+    const openEnded = DATA.filter(function(d){ return d.start_date && !d.end_date && todayStr>=d.start_date; });
+    if(openEnded.length) match = openEnded[openEnded.length-1];
+  }
+  if(!match && DATA.length && DATA[0].start_date && todayStr < DATA[0].start_date) match = null; // before trip starts
+  return match || null;
 }
 function switchAddType(type){
   addModalType = type;
   document.getElementById('addTypePacking').classList.toggle('active', type==='packing');
   document.getElementById('addTypePrep').classList.toggle('active', type==='prep');
+  document.getElementById('addTypeCost').classList.toggle('active', type==='cost');
   document.getElementById('addFieldsPacking').style.display = type==='packing' ? 'block' : 'none';
   document.getElementById('addFieldsPrep').style.display = type==='prep' ? 'block' : 'none';
+  document.getElementById('addFieldsCost').style.display = type==='cost' ? 'block' : 'none';
+  if(type==='cost'){
+    const leg = getCurrentLeg();
+    const countrySel = document.getElementById('addCostCountryInput');
+    countrySel.value = leg ? leg.country : 'General';
+  }
 }
 async function submitAddModal(){
   let ok = false;
@@ -861,12 +940,46 @@ async function submitAddModal(){
     const cat = document.getElementById('addPackCatInput').value;
     const text = document.getElementById('addPackTextInput').value;
     ok = await addPackItem(cat, text);
-  }else{
+  }else if(addModalType === 'prep'){
     const text = document.getElementById('addPrepTextInput').value;
     ok = await addPrepTask(text);
+  }else if(addModalType === 'cost'){
+    const cat = document.getElementById('addCostCatInput').value;
+    const amount = document.getElementById('addCostAmountInput').value;
+    const country = document.getElementById('addCostCountryInput').value;
+    const note = document.getElementById('addCostNoteInput').value;
+    ok = await addCostEntry(cat, amount, country, note);
   }
   if(ok){
     window.location.reload();
+  }
+}
+async function addCostEntry(cat, amount, country, note){
+  const amt = parseFloat(amount);
+  if(!amt || amt <= 0) return false;
+  const leg = getCurrentLeg();
+  const legId = (country==='General') ? null : (leg && leg.country===country ? leg.id : null);
+  const catName = ICON_CATEGORY[cat] || 'Other';
+  const title = (note && note.trim()) ? note.trim() : (catName + ' expense');
+  const costStr = '$' + amt.toLocaleString('en-AU', {minimumFractionDigits: (amt % 1 !== 0) ? 2 : 0, maximumFractionDigits:2});
+  try{
+    const inserted = await sb('bookings', {
+      method:'POST',
+      headers:{'Prefer':'return=representation'},
+      body: JSON.stringify({leg_id: legId, cat: cat, title: title, cost: costStr, status:'paid', note: (note && note.trim()) ? note.trim() : null})
+    });
+    const item = {id:inserted[0].id, cat:inserted[0].cat, title:inserted[0].title, provider:null, cost:inserted[0].cost, status:inserted[0].status, note:inserted[0].note, fd:null};
+    if(legId){
+      const d = DATA.find(function(x){ return x.id===legId; });
+      if(d) d.bookings.push(item);
+    }else{
+      GENERAL_COSTS.push(Object.assign({}, item, {country: country==='General' ? 'General' : country}));
+    }
+    showSaveStatus('saved'); lastFailedSave = null;
+    return true;
+  }catch(e){
+    showSaveStatus('error: ' + e.message);
+    return false;
   }
 }
 
