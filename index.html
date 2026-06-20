@@ -160,6 +160,20 @@
   .add-row input{flex:1; min-width:0;}
   .add-row input::placeholder{color:var(--parchment-dim);}
   .add-row button{background:var(--amber); color:var(--ink); border:none; border-radius:8px; padding:9px 14px; font-weight:700; font-size:13px; cursor:pointer; flex-shrink:0;}
+
+  /* PREP ADD FAB + MODAL */
+  .prep-fab{display:flex; align-items:center; justify-content:center; width:54px; height:54px; border-radius:50%; background:var(--amber); color:var(--ink); font-size:28px; font-weight:700; border:none; cursor:pointer; margin:0 auto 18px; box-shadow:0 4px 14px rgba(227,163,59,0.35);}
+  #addModalOverlay{position:fixed; inset:0; background:rgba(10,15,19,0.6); display:none; align-items:flex-end; z-index:60;}
+  #addModal{background:var(--ink-2); width:100%; max-width:520px; margin:0 auto; border-radius:18px 18px 0 0; padding:20px 18px 28px; border-top:1px solid var(--hairline); position:relative;}
+  #addModal .handle{width:36px; height:4px; background:var(--hairline); border-radius:4px; margin:0 auto 14px;}
+  #addModal .close{position:absolute; top:14px; right:16px; background:none; border:none; color:var(--parchment-dim); font-size:18px; cursor:pointer;}
+  .add-type-tabs{display:flex; gap:6px; margin-bottom:16px;}
+  .add-type-tab{flex:1; background:var(--ink-3); border:1px solid var(--hairline); color:var(--parchment-dim); font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:12.5px; padding:10px 0; border-radius:10px; cursor:pointer; text-align:center;}
+  .add-type-tab.active{background:rgba(227,163,59,0.14); border-color:var(--amber); color:var(--amber);}
+  .add-field{margin-bottom:12px;}
+  .add-field label{display:block; font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--amber); margin-bottom:5px;}
+  .add-field input, .add-field select{width:100%; background:var(--ink-3); border:1px solid var(--hairline); color:var(--parchment); border-radius:8px; padding:11px 12px; font-family:'Space Grotesk',sans-serif; font-size:14px;}
+  .add-save-btn{width:100%; background:var(--amber); color:var(--ink); border:none; border-radius:10px; padding:13px 0; font-weight:700; font-size:14px; cursor:pointer; margin-top:6px;}
   .prep-progress{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--parchment-dim); text-align:right; margin-bottom:8px;}
 
   /* AUTH GATE */
@@ -227,6 +241,45 @@
   <div class="empty-note">Costs reflect everything logged so far, paid or not.</div>
 </div>
 
+<div id="addModalOverlay">
+  <div id="addModal">
+    <button class="close" onclick="closeAddModal()">✕</button>
+    <div class="handle"></div>
+    <div class="add-type-tabs">
+      <button class="add-type-tab active" id="addTypePacking" onclick="switchAddType('packing')">Packing Item</button>
+      <button class="add-type-tab" id="addTypePrep" onclick="switchAddType('prep')">Prep Task</button>
+    </div>
+
+    <div id="addFieldsPacking">
+      <div class="add-field">
+        <label>Category</label>
+        <select id="addPackCatInput">
+          <option value="Documents">Documents</option>
+          <option value="Health">Health</option>
+          <option value="Clothing">Clothing</option>
+          <option value="Tech">Tech</option>
+          <option value="Gear">Gear</option>
+          <option value="Money">Money</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="add-field">
+        <label>Item</label>
+        <input id="addPackTextInput" type="text" placeholder="e.g. Spare phone charger">
+      </div>
+    </div>
+
+    <div id="addFieldsPrep" style="display:none;">
+      <div class="add-field">
+        <label>Task</label>
+        <input id="addPrepTextInput" type="text" placeholder="e.g. Renew driver's licence">
+      </div>
+    </div>
+
+    <button class="add-save-btn" onclick="submitAddModal()">Save</button>
+  </div>
+</div>
+
 <div id="overlay">
   <div id="sheet">
     <button class="close" id="closeSheet">✕</button>
@@ -270,10 +323,14 @@ async function loadData(){
   try{
     const legs = await sb('legs?select=*&order=sort_order.asc');
     const bookingsRaw = await sb('bookings?select=*');
+    const flightDetailsRaw = await sb('flight_details?select=*');
+    const fdByBooking = {};
+    flightDetailsRaw.forEach(function(fd){ fdByBooking[fd.booking_id] = fd; });
+
     const byLeg = {};
     const general = [];
     bookingsRaw.forEach(function(b){
-      const item = {cat:b.cat, title:b.title, provider:b.provider, cost:b.cost, status:b.status, note:b.note};
+      const item = {id:b.id, cat:b.cat, title:b.title, provider:b.provider, cost:b.cost, status:b.status, note:b.note, fd: fdByBooking[b.id] || null};
       if(b.leg_id === null){
         general.push(item);
       }else{
@@ -385,15 +442,40 @@ function renderBookings(d){
     return;
   }
   pane.innerHTML = list.map(function(b){
-    return '<div class="bk-item">'
+    const isFlight = b.cat === '✈️' && b.fd;
+    return '<div class="bk-item"'+(isFlight ? ' onclick="toggleFlightDetail('+b.id+')" style="cursor:pointer;"' : '')+'>'
       + '<div class="bk-top"><div class="bk-title">'+b.cat+' '+b.title+'</div>'
       + '<div class="bk-cost">'+(b.cost||'')+'</div></div>'
       + '<div class="bk-provider">'+(b.provider||'')+'</div>'
       + (b.note ? '<div class="bk-note">'+b.note+'</div>' : '')
-      + '<div class="bk-status">'+bkStatusPill(b.status)+'</div>'
+      + '<div class="bk-status">'+bkStatusPill(b.status)+(isFlight ? ' <span class="mono" style="font-size:9px; color:var(--amber); margin-left:6px;">tap for flight details ›</span>' : '')+'</div>'
+      + (isFlight ? '<div class="flight-detail" id="fd-'+b.id+'" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed var(--hairline);">' + renderFlightDetail(b.fd) + '</div>' : '')
       + '</div>';
   }).join('');
   document.getElementById('tabBookings').textContent = 'Bookings (' + list.length + ')';
+}
+
+function renderFlightDetail(fd){
+  const rows = [];
+  if(fd.flight_number || fd.airline) rows.push(['Flight', [fd.airline, fd.flight_number].filter(Boolean).join(' ')]);
+  if(fd.aircraft_type) rows.push(['Aircraft', fd.aircraft_type]);
+  if(fd.departure_airport) rows.push(['Departs', fd.departure_airport + (fd.departure_terminal ? ' · ' + fd.departure_terminal : '')]);
+  if(fd.arrival_airport) rows.push(['Arrives', fd.arrival_airport + (fd.arrival_terminal ? ' · ' + fd.arrival_terminal : '')]);
+  if(fd.duration) rows.push(['Duration', fd.duration]);
+  if(fd.route_notes) rows.push(['Route', fd.route_notes]);
+  if(fd.seat) rows.push(['Seat', fd.seat]);
+  if(fd.confirmation_number) rows.push(['Confirmation', fd.confirmation_number]);
+  if(fd.baggage_policy) rows.push(['Baggage', fd.baggage_policy]);
+  if(fd.checkin_notes) rows.push(['Check-in', fd.checkin_notes]);
+  if(fd.public_notes) rows.push(['Notes', fd.public_notes]);
+  return rows.map(function(r){
+    return '<div style="margin-bottom:8px;"><div class="mono" style="font-size:9px; text-transform:uppercase; letter-spacing:0.08em; color:var(--amber); margin-bottom:2px;">'+r[0]+'</div><div style="font-size:12px; line-height:1.5;">'+r[1]+'</div></div>';
+  }).join('');
+}
+
+function toggleFlightDetail(bookingId){
+  const el = document.getElementById('fd-'+bookingId);
+  if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 function switchTab(tab){
@@ -682,24 +764,36 @@ async function deletePack(id){
     lastFailedSave = function(){ return deletePack(id); };
   }
 }
-async function addPackItem(){
-  const input = document.getElementById('newPackText');
-  const select = document.getElementById('newPackCat');
-  const text = input.value.trim();
-  if(!text) return;
-  input.value = '';
+async function addPackItem(category, text){
+  if(!text || !text.trim()) return false;
   try{
     const inserted = await sb('packing_items', {
       method:'POST',
       headers:{'Prefer':'return=representation'},
-      body: JSON.stringify({category: select.value, text: text, checked:false})
+      body: JSON.stringify({category: category, text: text.trim(), checked:false})
     });
     PACKING.push(inserted[0]);
-    renderPrep();
     showSaveStatus('synced'); lastFailedSave = null;
+    return true;
   }catch(e){
     showSaveStatus('error: ' + e.message);
-    lastFailedSave = addPackItem;
+    return false;
+  }
+}
+async function addPrepTask(text){
+  if(!text || !text.trim()) return false;
+  try{
+    const inserted = await sb('prep_tasks', {
+      method:'POST',
+      headers:{'Prefer':'return=representation'},
+      body: JSON.stringify({text: text.trim(), checked:false})
+    });
+    PREP_TASKS.push(inserted[0]);
+    showSaveStatus('synced'); lastFailedSave = null;
+    return true;
+  }catch(e){
+    showSaveStatus('error: ' + e.message);
+    return false;
   }
 }
 
@@ -729,7 +823,8 @@ function renderPrep(){
   }).join('');
 
   el.innerHTML =
-    '<div class="misc open" id="misc-prep-tasks">'
+    '<button class="prep-fab" onclick="openAddModal()">+</button>'
+    + '<div class="misc open" id="misc-prep-tasks">'
       + '<div class="misc-head" onclick="toggleMisc2(\'misc-prep-tasks\')"><div class="misc-icon">✅</div><div class="misc-name">Before you go</div><div class="chev">›</div></div>'
       + '<div class="misc-body">'
         + '<div class="prep-progress">'+doneTasks+' / '+PREP_TASKS.length+' done</div>'
@@ -741,17 +836,39 @@ function renderPrep(){
       + '<div class="misc-body">'
         + '<div class="prep-progress">'+donePack+' / '+PACKING.length+' packed</div>'
         + packHtml
-        + '<div class="add-row">'
-          + '<select id="newPackCat">'
-            + ['Documents','Health','Clothing','Tech','Gear','Money','Other'].map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('')
-          + '</select>'
-          + '<input id="newPackText" type="text" placeholder="Add item…" onkeypress="if(event.key===\'Enter\')addPackItem()">'
-          + '<button onclick="addPackItem()">Add</button>'
-        + '</div>'
       + '</div>'
     + '</div>';
 }
 function toggleMisc2(id){ document.getElementById(id).classList.toggle('open'); }
+
+let addModalType = 'packing';
+function openAddModal(){
+  document.getElementById('addModalOverlay').style.display = 'flex';
+}
+function closeAddModal(){
+  document.getElementById('addModalOverlay').style.display = 'none';
+}
+function switchAddType(type){
+  addModalType = type;
+  document.getElementById('addTypePacking').classList.toggle('active', type==='packing');
+  document.getElementById('addTypePrep').classList.toggle('active', type==='prep');
+  document.getElementById('addFieldsPacking').style.display = type==='packing' ? 'block' : 'none';
+  document.getElementById('addFieldsPrep').style.display = type==='prep' ? 'block' : 'none';
+}
+async function submitAddModal(){
+  let ok = false;
+  if(addModalType === 'packing'){
+    const cat = document.getElementById('addPackCatInput').value;
+    const text = document.getElementById('addPackTextInput').value;
+    ok = await addPackItem(cat, text);
+  }else{
+    const text = document.getElementById('addPrepTextInput').value;
+    ok = await addPrepTask(text);
+  }
+  if(ok){
+    window.location.reload();
+  }
+}
 
 /* ============ MAIN TABS + COUNTDOWN ============ */
 function showMainTab(tab){
