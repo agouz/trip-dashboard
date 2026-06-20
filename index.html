@@ -868,12 +868,6 @@ function tickCountdown(){
 }
 
 (async function(){
-  if(!window.storage){
-    const warn = document.createElement('div');
-    warn.style.cssText = 'background:#C1573D; color:#fff; padding:10px 14px; border-radius:10px; font-size:12px; margin-bottom:14px; text-align:center;';
-    warn.textContent = '⚠️ Storage unavailable — open this dashboard from the Claude conversation, not as a standalone downloaded file, or your changes won\'t be saved.';
-    document.getElementById('app').prepend(warn);
-  }
   await loadData();
   await loadPrep();
   document.getElementById('retrySaveBtn').onclick = retrySave;
