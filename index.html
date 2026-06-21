@@ -16,6 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="map-d3.min.js" defer></script>
+<script src="map-topojson-client.min.js" defer></script>
 <style>
   :root{
     --ink:#16222C; --ink-2:#1E2E3A; --ink-3:#243747;
@@ -132,7 +134,22 @@
   .cd-label{font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--parchment-dim); margin-top:2px;}
 
   /* MAIN TABS */
+  .map-toolbar{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px;}
+  .map-legend{display:flex; flex-wrap:wrap; gap:6px 10px; flex:1;}
+  .map-legend-item{display:flex; align-items:center; gap:4px; font-size:9.5px; color:var(--parchment-dim);}
+  .map-legend-item i{width:7px; height:7px; border-radius:50%; display:block; flex-shrink:0;}
+  .map-controls{display:flex; gap:6px; flex-shrink:0;}
+  .map-btn{width:32px; height:32px; border-radius:8px; background:var(--ink-2); border:1px solid var(--hairline); color:var(--parchment); font-size:16px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .map-btn-wide{width:auto; padding:0 10px; font-size:10px; font-family:'IBM Plex Mono',monospace; font-weight:600; white-space:nowrap;}
+  .map-wrap{position:relative; height:68vh; min-height:380px; border:1px solid var(--hairline); border-radius:14px; overflow:hidden; background:#0c1318; touch-action:none;}
+  .map-wrap svg{width:100%; height:100%; display:block; cursor:grab;}
+  .map-wrap svg:active{cursor:grabbing;}
+  .map-hint{position:absolute; bottom:8px; left:0; right:0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--parchment-dim); opacity:0.7; pointer-events:none; transition:opacity 0.3s ease;}
+  .map-pin-label{font-family:'Space Grotesk',sans-serif; font-weight:700; fill:var(--parchment); paint-order:stroke; stroke:#0c1318; stroke-width:3px; pointer-events:none;}
+  .map-seq-label{font-family:'IBM Plex Mono',monospace; fill:var(--parchment-dim); pointer-events:none;}
+
   .cal-legend{display:flex; flex-wrap:wrap; gap:9px 14px; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--hairline);}
+
   .cal-legend-item{display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--parchment-dim);}
   .cal-legend-item i{width:8px; height:8px; border-radius:50%; display:block; flex-shrink:0;}
   .cal-month{margin-bottom:22px;}
@@ -257,6 +274,7 @@
       <button class="side-nav-close" onclick="closeSideNav()">×</button>
     </div>
     <div class="side-nav-item active" data-tab="itinerary" onclick="navigateTo('itinerary')"><span class="sn-ic">🗺️</span> Trip</div>
+    <div class="side-nav-item" data-tab="map" onclick="navigateTo('map')"><span class="sn-ic">🌎</span> Map</div>
     <div class="side-nav-item" data-tab="calendar" onclick="navigateTo('calendar')"><span class="sn-ic">📅</span> Calendar</div>
     <div class="side-nav-item" data-tab="costs" onclick="navigateTo('costs')"><span class="sn-ic">💰</span> Costs</div>
     <div class="side-nav-item" data-tab="prep" onclick="navigateTo('prep')"><span class="sn-ic">🎒</span> Prep</div>
@@ -291,6 +309,21 @@
     </div>
 
     <div id="countries"></div>
+  </div>
+
+  <div id="tab-map" style="display:none;">
+    <div class="map-toolbar">
+      <div class="map-legend" id="mapLegend"></div>
+      <div class="map-controls">
+        <button class="map-btn" onclick="mapZoomBy(1.6)">+</button>
+        <button class="map-btn" onclick="mapZoomBy(0.625)">−</button>
+        <button class="map-btn map-btn-wide" onclick="mapResetView()">Fit Americas</button>
+      </div>
+    </div>
+    <div class="map-wrap" id="mapWrap">
+      <svg id="mapSvg"></svg>
+      <div class="map-hint" id="mapHint">Pinch or scroll to zoom · tap a pin for details</div>
+    </div>
   </div>
 
   <div id="tab-calendar" style="display:none;"></div>
@@ -448,6 +481,8 @@ async function loadData(){
         dates: l.dates_display,
         start_date: l.start_date,
         end_date: l.end_date,
+        lat: l.lat,
+        lng: l.lng,
         status: l.status,
         priority: l.priority,
         plan: l.plan,
@@ -585,6 +620,160 @@ function renderCalendar(){
 
 function toggleCountry(i){
   document.getElementById('country-'+i).classList.toggle('open');
+}
+
+const COUNTRY_ISO = {"840":"USA","484":"Mexico","320":"Guatemala","604":"Peru","068":"Bolivia","032":"Argentina","076":"Brazil","156":"China"};
+let MAP_ZOOM = null, MAP_SVG = null, MAP_G = null, MAP_K0 = 1.8;
+
+async function renderMap(){
+  if(typeof d3 === 'undefined' || typeof topojson === 'undefined'){
+    setTimeout(renderMap, 150);
+    return;
+  }
+  const wrap = document.getElementById('mapWrap');
+  const width = wrap.clientWidth || 360;
+  const height = wrap.clientHeight || 480;
+
+  document.getElementById('mapLegend').innerHTML = Object.keys(COUNTRY_META).map(function(c){
+    const meta = COUNTRY_META[c];
+    return '<div class="map-legend-item"><i style="background:'+meta.accent+';"></i>'+meta.flag+' '+c+'</div>';
+  }).join('');
+
+  let world;
+  try{
+    const resp = await fetch('map-countries-110m.json');
+    world = await resp.json();
+  }catch(e){
+    document.getElementById('mapWrap').innerHTML = '<div style="padding:30px; text-align:center; color:var(--parchment-dim); font-size:13px;">Map data failed to load. Check your connection and reopen this tab.</div>';
+    return;
+  }
+  const countries = topojson.feature(world, world.objects.countries);
+
+  const projection = d3.geoNaturalEarth1().fitSize([width, height], countries);
+  const path = d3.geoPath(projection);
+
+  const svg = d3.select('#mapSvg').attr('viewBox', '0 0 '+width+' '+height);
+  svg.selectAll('*').remove();
+  MAP_SVG = svg;
+
+  const g = svg.append('g').attr('class', 'zoomable');
+  MAP_G = g;
+
+  // Country fills
+  g.append('g').attr('class', 'countries-layer')
+    .selectAll('path')
+    .data(countries.features)
+    .join('path')
+    .attr('d', path)
+    .attr('fill', function(d){ return COUNTRY_ISO[d.id] ? (COUNTRY_META[COUNTRY_ISO[d.id]].accent + 'B3') : '#2A3744'; })
+    .attr('stroke', '#0c1318')
+    .attr('stroke-width', 0.6);
+
+  // Arrowhead marker
+  const defs = svg.append('defs');
+  defs.append('marker').attr('id','arrowhead').attr('viewBox','0 0 10 10')
+    .attr('refX', 8).attr('refY', 5).attr('markerWidth', 5).attr('markerHeight', 5).attr('orient','auto-start-reverse')
+    .append('path').attr('d','M0,0 L10,5 L0,10 Z').attr('fill', '#EDE3CF');
+
+  // Build sequential pin chain (legs with coordinates, in trip order)
+  const points = DATA.filter(function(d){ return d.lat != null && d.lng != null; });
+  const arrowsLayer = g.append('g').attr('class', 'arrows-layer');
+  const pinsLayer = g.append('g').attr('class', 'pins-layer');
+  const labelsLayer = g.append('g').attr('class', 'labels-layer');
+
+  const projected = points.map(function(d){
+    const xy = projection([d.lng, d.lat]);
+    return {d:d, x:xy[0], y:xy[1]};
+  });
+
+  // Curved arrows between consecutive points
+  for(let i=0; i<projected.length-1; i++){
+    const a = projected[i], b = projected[i+1];
+    const dx = b.x-a.x, dy = b.y-a.y;
+    const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+    const dist = Math.sqrt(dx*dx+dy*dy) || 1;
+    const offset = Math.min(dist*0.22, 40);
+    const cx = mx - (dy/dist)*offset;
+    const cy = my + (dx/dist)*offset;
+    arrowsLayer.append('path')
+      .attr('d', 'M'+a.x+','+a.y+' Q'+cx+','+cy+' '+b.x+','+b.y)
+      .attr('fill','none').attr('stroke','#EDE3CF').attr('stroke-opacity', 0.55)
+      .attr('stroke-width', 1.4).attr('marker-end','url(#arrowhead)')
+      .attr('class','map-arrow');
+    arrowsLayer.append('text')
+      .attr('x', cx).attr('y', cy)
+      .attr('class','map-seq-label')
+      .attr('text-anchor','middle')
+      .attr('font-size', 7)
+      .text(i+1);
+  }
+
+  // Pins
+  const meta_for = function(d){ return COUNTRY_META[d.country] || {accent:'#B9B2A0'}; };
+  pinsLayer.selectAll('circle')
+    .data(projected)
+    .join('circle')
+    .attr('cx', function(p){ return p.x; })
+    .attr('cy', function(p){ return p.y; })
+    .attr('r', 4)
+    .attr('fill', function(p){ return meta_for(p.d).accent; })
+    .attr('stroke', '#0c1318').attr('stroke-width', 1.2)
+    .style('cursor','pointer')
+    .on('click', function(ev, p){ openSheet(p.d.id); });
+
+  labelsLayer.selectAll('text')
+    .data(projected)
+    .join('text')
+    .attr('x', function(p){ return p.x+7; })
+    .attr('y', function(p){ return p.y+3; })
+    .attr('class','map-pin-label')
+    .attr('font-size', 9)
+    .text(function(p){ return p.d.loc.replace(/^Transit:.*/, '').trim() || p.d.loc; });
+
+  // Initial framing: fit bounding box of all pins (the Americas-heavy trip route)
+  const xs = projected.map(function(p){ return p.x; });
+  const ys = projected.map(function(p){ return p.y; });
+  const bx0 = Math.min.apply(null, xs), bx1 = Math.max.apply(null, xs);
+  const by0 = Math.min.apply(null, ys), by1 = Math.max.apply(null, ys);
+  const bw = Math.max(bx1-bx0, 1), bh = Math.max(by1-by0, 1);
+  const pad = 0.22;
+  let k0 = Math.min(width/(bw*(1+pad)), height/(bh*(1+pad)));
+  k0 = Math.max(1, Math.min(k0, 6));
+  MAP_K0 = k0;
+  const tx = width/2 - k0*(bx0+bx1)/2;
+  const ty = height/2 - k0*(by0+by1)/2;
+
+  const zoom = d3.zoom()
+    .scaleExtent([0.9, 24])
+    .on('zoom', function(ev){
+      const t = ev.transform;
+      g.attr('transform', t);
+      const k = t.k;
+      pinsLayer.attr('stroke-width', 1.2/k).selectAll('circle').attr('r', 4/k);
+      arrowsLayer.selectAll('path.map-arrow').attr('stroke-width', 1.4/k);
+      arrowsLayer.selectAll('text').attr('font-size', 7/k);
+      const showPins = k > k0*0.55;
+      const showLabels = k > k0*1.7;
+      pinsLayer.style('opacity', showPins ? 1 : 0).style('pointer-events', showPins ? 'auto' : 'none');
+      arrowsLayer.style('opacity', showPins ? 1 : 0);
+      labelsLayer.style('opacity', showLabels ? 1 : 0);
+      labelsLayer.selectAll('text').attr('font-size', 9/k);
+      document.getElementById('mapHint').style.opacity = (k > k0*0.55 ? '0' : '0.7');
+    });
+
+  MAP_ZOOM = zoom;
+  svg.call(zoom);
+  svg.call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(k0));
+}
+
+function mapZoomBy(factor){
+  if(!MAP_SVG || !MAP_ZOOM) return;
+  MAP_SVG.transition().duration(220).call(MAP_ZOOM.scaleBy, factor);
+}
+function mapResetView(){
+  if(!window.MAP_RENDERED) return;
+  window.MAP_RENDERED = false;
+  renderMap();
 }
 
 function jumpToCountry(i){
@@ -1144,7 +1333,7 @@ async function addCostEntry(cat, amount, country, note){
 }
 
 /* ============ MAIN TABS + COUNTDOWN ============ */
-const MAIN_TABS = ['itinerary','calendar','costs','prep','other'];
+const MAIN_TABS = ['itinerary','map','calendar','costs','prep','other'];
 function showMainTab(tab){
   MAIN_TABS.forEach(function(t){
     const sec = document.getElementById('tab-'+t);
@@ -1166,6 +1355,10 @@ function navigateTo(tab){
   showMainTab(tab);
   closeSideNav();
   window.scrollTo({top:0, behavior:'instant'});
+  if(tab === 'map' && !window.MAP_RENDERED){
+    window.MAP_RENDERED = true;
+    setTimeout(renderMap, 30); // let layout settle so container has real dimensions
+  }
 }
 
 const TRIP_START = new Date("2026-07-14T09:10:00+10:00");
