@@ -145,7 +145,7 @@
   .map-wrap svg{width:100%; height:100%; display:block; cursor:grab;}
   .map-wrap svg:active{cursor:grabbing;}
   .map-hint{position:absolute; bottom:8px; left:0; right:0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--parchment-dim); opacity:0.7; pointer-events:none; transition:opacity 0.3s ease;}
-  .map-pin-label{font-family:'Space Grotesk',sans-serif; font-weight:700; fill:var(--parchment); paint-order:stroke; stroke:#0c1318; stroke-width:3px; pointer-events:none;}
+  .map-pin-label{font-family:'Space Grotesk',sans-serif; font-weight:700; fill:var(--parchment); paint-order:stroke; stroke:#0c1318; stroke-width:2px; stroke-linejoin:round; pointer-events:none;}
   .map-seq-label{font-family:'IBM Plex Mono',monospace; fill:var(--parchment-dim); pointer-events:none;}
 
   .cal-legend{display:flex; flex-wrap:wrap; gap:9px 14px; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--hairline);}
@@ -728,7 +728,7 @@ async function renderMap(){
     .attr('y', function(p){ return p.y+3; })
     .attr('class','map-pin-label')
     .attr('font-size', 9)
-    .text(function(p){ return p.d.loc.replace(/^Transit:.*/, '').trim() || p.d.loc; });
+    .text(function(p){ return p.d.loc; });
 
   // Initial framing: fit bounding box of all pins (the Americas-heavy trip route)
   const xs = projected.map(function(p){ return p.x; });
@@ -743,27 +743,51 @@ async function renderMap(){
   const tx = width/2 - k0*(bx0+bx1)/2;
   const ty = height/2 - k0*(by0+by1)/2;
 
+  const labelTextNodes = labelsLayer.selectAll('text').nodes();
+
+  function updateVisuals(t){
+    g.attr('transform', t);
+    const k = t.k;
+    pinsLayer.attr('stroke-width', 1.2/k).selectAll('circle').attr('r', 4/k);
+    arrowsLayer.selectAll('path.map-arrow').attr('stroke-width', 1.4/k);
+    arrowsLayer.selectAll('text').attr('font-size', 7/k);
+    const showPins = k > k0*0.55;
+    const showLabels = k > k0*2.1;
+    pinsLayer.style('opacity', showPins ? 1 : 0).style('pointer-events', showPins ? 'auto' : 'none');
+    arrowsLayer.style('opacity', showPins ? 1 : 0);
+    document.getElementById('mapHint').style.opacity = (showPins ? '0' : '0.7');
+
+    if(!showLabels){
+      labelsLayer.style('opacity', 0);
+      return;
+    }
+    labelsLayer.style('opacity', 1);
+    labelsLayer.selectAll('text').attr('font-size', 9/k);
+    // greedy collision avoidance: hide any label whose screen-space box overlaps an already-placed one
+    const placed = [];
+    labelTextNodes.forEach(function(node, i){
+      const p = projected[i];
+      const screen = t.apply([p.x, p.y]);
+      let w = 60;
+      try{ w = node.getComputedTextLength() || 60; }catch(e){}
+      const rect = {x0:screen[0]-2, x1:screen[0]+w+10, y0:screen[1]-9, y1:screen[1]+9};
+      const collide = placed.some(function(r){
+        return !(rect.x1 < r.x0 || rect.x0 > r.x1 || rect.y1 < r.y0 || rect.y0 > r.y1);
+      });
+      node.style.display = collide ? 'none' : '';
+      if(!collide) placed.push(rect);
+    });
+  }
+
   const zoom = d3.zoom()
     .scaleExtent([0.9, 24])
-    .on('zoom', function(ev){
-      const t = ev.transform;
-      g.attr('transform', t);
-      const k = t.k;
-      pinsLayer.attr('stroke-width', 1.2/k).selectAll('circle').attr('r', 4/k);
-      arrowsLayer.selectAll('path.map-arrow').attr('stroke-width', 1.4/k);
-      arrowsLayer.selectAll('text').attr('font-size', 7/k);
-      const showPins = k > k0*0.55;
-      const showLabels = k > k0*1.7;
-      pinsLayer.style('opacity', showPins ? 1 : 0).style('pointer-events', showPins ? 'auto' : 'none');
-      arrowsLayer.style('opacity', showPins ? 1 : 0);
-      labelsLayer.style('opacity', showLabels ? 1 : 0);
-      labelsLayer.selectAll('text').attr('font-size', 9/k);
-      document.getElementById('mapHint').style.opacity = (k > k0*0.55 ? '0' : '0.7');
-    });
+    .on('zoom', function(ev){ updateVisuals(ev.transform); });
 
   MAP_ZOOM = zoom;
   svg.call(zoom);
-  svg.call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(k0));
+  const initialT = d3.zoomIdentity.translate(tx,ty).scale(k0);
+  svg.call(zoom.transform, initialT);
+  updateVisuals(initialT);
 }
 
 function mapZoomBy(factor){
