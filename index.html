@@ -57,7 +57,9 @@
   #countries{display:flex; flex-direction:column; gap:10px;}
   .country{position:relative; border:1px solid var(--hairline); border-radius:var(--radius); background:var(--ink-2); overflow:hidden;}
   .country::before{content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent, var(--hairline));}
-  .country-head{display:flex; align-items:center; gap:12px; padding:14px 14px 14px 18px; cursor:pointer;}
+  .country-head{cursor:pointer; overflow:hidden; border-radius:var(--radius) var(--radius) 0 0;}
+  .country-img{width:100%; height:110px; object-fit:cover; display:block; opacity:0.88;}
+  .country-head-info{display:flex; align-items:center; gap:12px; padding:11px 14px 11px 18px; background:linear-gradient(to bottom, rgba(22,34,44,0.0) 0%, rgba(22,34,44,0.72) 100%); margin-top:-44px; position:relative;}
   .country-flag{font-size:20.5px; line-height:1; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:var(--accent-soft, var(--ink-3)); border:1px solid var(--accent, var(--hairline)); flex-shrink:0;}
   .country-main{flex:1; min-width:0;}
   .country-name{font-size:18px; font-weight:700;}
@@ -535,6 +537,12 @@ function groupByCountry(){
   return groups;
 }
 
+const COUNTRY_IMG = {
+  USA:"bg-usa.jpg", Mexico:"bg-mexico.jpg", Guatemala:"bg-guatemala.jpg",
+  Peru:"bg-peru.jpg", Bolivia:"bg-bolivia.jpg", Argentina:"bg-argentina.jpg",
+  Brazil:"bg-brazil.jpg", China:"bg-china.jpg"
+};
+
 function renderCountries(){
   const groups = groupByCountry();
   const el = document.getElementById('countries');
@@ -551,12 +559,17 @@ function renderCountries(){
         + (bkCount ? '<div class="booking-badge">🧾 '+bkCount+' booking'+(bkCount>1?'s':'')+'</div>' : '')
         + '</div></div>';
     }).join('');
+    const imgSrc = COUNTRY_IMG[g.country];
+    const imgHtml = imgSrc ? '<img class="country-img" src="'+imgSrc+'" alt="'+meta.name+'" loading="lazy">' : '';
     return '<div class="country" id="country-'+i+'" style="--accent:'+meta.accent+'; --accent-soft:'+meta.accent+'26;">'
       + '<div class="country-head" onclick="toggleCountry('+i+')">'
+      + imgHtml
+      + '<div class="country-head-info">'
       + '<div class="country-flag">'+meta.flag+'</div>'
       + '<div class="country-main"><div class="country-name">'+meta.name+'</div>'
       + '<div class="country-dates mono">'+g.start+' – '+g.end+'</div></div>'
       + '<div class="country-status"><div class="status-bar">'+bars+'</div><div class="chev">›</div></div>'
+      + '</div>'
       + '</div><div class="country-body">'+legsHtml+'</div></div>';
   }).join('');
 }
