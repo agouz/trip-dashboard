@@ -296,7 +296,7 @@
     <div class="side-nav-item logout" onclick="doLogout()"><span class="sn-ic">🚪</span> Log out</div>
   </nav>
 
-  <div id="saveStatusBar" style="display:none; background:var(--ink-2); border:1px solid var(--hairline); border-radius:10px; padding:9px 12px; margin-bottom:14px; font-family:'IBM Plex Mono',monospace; font-size:12px; display:flex; justify-content:space-between; align-items:center;">
+  <div id="saveStatusBar" style="background:var(--ink-2); border:1px solid var(--hairline); border-radius:10px; padding:9px 12px; margin-bottom:14px; font-family:'IBM Plex Mono',monospace; font-size:12px; display:none; justify-content:space-between; align-items:center;">
     <span id="saveStatus">—</span>
     <button id="retrySaveBtn" style="display:none; background:var(--amber); color:var(--ink); border:none; border-radius:6px; padding:4px 9px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px; cursor:pointer;">Retry</button>
   </div>
@@ -562,15 +562,14 @@ function groupByCountry(){
 }
 
 const COUNTRY_IMG = {
-  // Real Unsplash CDN URLs — photo IDs verified from og:image meta tags, imgix resize applied
-  USA:       "https://images.unsplash.com/photo-1540875747534-32b4bb22bf5d?w=700&h=200&fit=crop&crop=center&q=80", // El Capitan Yosemite by Casey Horner
-  Mexico:    "https://images.unsplash.com/photo-1672687468661-f77325658ae5?w=700&h=200&fit=crop&crop=center&q=80", // Teotihuacan aerial drone by Anton Lukin
-  Guatemala: "https://images.unsplash.com/photo-1666091863721-54331a5db52d?w=700&h=200&fit=crop&crop=bottom&q=80", // Fuego erupting at night by Jeferson Argueta
-  Peru:      "https://images.unsplash.com/photo-1725197892394-0c0c598ecb98?w=700&h=200&fit=crop&crop=center&q=80", // Machu Picchu ruins by Meg von Haartman
-  Bolivia:   "https://images.unsplash.com/photo-1528161498624-89b0174b714d?w=700&h=200&fit=crop&crop=center&q=80", // Uyuni salt flat mirror by B
-  Argentina: "https://images.unsplash.com/photo-1663918909576-5af780312b8a?w=700&h=200&fit=crop&crop=center&q=80", // Perito Moreno glacier by Florian Delée
-  Brazil:    "https://images.unsplash.com/photo-1537798518344-7ee3acb6e6d1?w=700&h=200&fit=crop&crop=center&q=80", // Rio sunset from Sugarloaf by Peter Conlan
-  China:     "https://images.unsplash.com/photo-1650189222404-cf60dc90eae5?w=700&h=200&fit=crop&crop=center&q=80", // Great Wall at sunset by gabriel xu
+  USA:       "https://images.unsplash.com/photo-1524242109383-e349707a106b?w=700&h=200&fit=crop&crop=center&q=80", // Statue of Liberty by Dan Calderwood
+  Mexico:    "https://images.unsplash.com/photo-1672687468661-f77325658ae5?w=700&h=200&fit=crop&crop=center&q=80", // Teotihuacan aerial by Anton Lukin
+  Guatemala: "https://images.unsplash.com/photo-1555339990-18e05015e062?w=700&h=200&fit=crop&crop=center&q=80", // Fuego lava eruption at night by Aaron Thomas
+  Peru:      "https://images.unsplash.com/photo-1725197892394-0c0c598ecb98?w=700&h=200&fit=crop&crop=center&q=80", // Machu Picchu by Meg von Haartman
+  Bolivia:   "https://images.unsplash.com/photo-1528161498624-89b0174b714d?w=700&h=200&fit=crop&crop=center&q=80", // Uyuni mirror sky by B
+  Argentina: "https://images.unsplash.com/photo-1656856747603-1777348793e6?w=700&h=200&fit=crop&crop=center&q=80", // Iguazú Falls panoramic by Nadine Marfurt
+  Brazil:    "https://images.unsplash.com/photo-1537798518344-7ee3acb6e6d1?w=700&h=200&fit=crop&crop=center&q=80", // Rio de Janeiro sunset by Peter Conlan
+  China:     "https://images.unsplash.com/photo-1650189222404-cf60dc90eae5?w=700&h=200&fit=crop&crop=center&q=80", // Great Wall by gabriel xu
 };
 
 function renderCountries(){
@@ -1254,8 +1253,12 @@ function showSaveStatus(msg){
   el.textContent = (ok ? '✓ ' : '✗ ') + msg + ' · ' + time;
   el.style.color = ok ? 'var(--moss)' : 'var(--rust)';
   bar.style.display = 'flex';
-  bar.style.borderColor = ok ? 'var(--moss)' : 'var(--rust)';
+  bar.style.borderColor = ok ? 'rgba(107,142,99,0.5)' : 'rgba(193,87,61,0.5)';
   retryBtn.style.display = ok ? 'none' : 'inline-block';
+  if(ok){
+    clearTimeout(bar._hideTimer);
+    bar._hideTimer = setTimeout(function(){ bar.style.display = 'none'; }, 3000);
+  }
 }
 async function retrySave(){
   if(lastFailedSave) await lastFailedSave();
