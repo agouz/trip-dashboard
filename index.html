@@ -126,6 +126,17 @@
   #sheet .row .label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--amber); margin-bottom:4px;}
   #sheet .row .val{font-size:15px; line-height:1.5; color:var(--parchment);}
   #sheet .close{position:absolute; top:14px; right:16px; background:none; border:none; color:var(--parchment-dim); font-size:20.5px; cursor:pointer;}
+  .day-card{display:flex; gap:11px; margin-bottom:10px; align-items:flex-start;}
+  .day-card-date{flex-shrink:0; width:44px; text-align:center; padding-top:2px;}
+  .day-card-date .dc-dow{font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.08em; color:var(--amber);}
+  .day-card-date .dc-day{font-size:20px; font-weight:700; line-height:1; color:var(--parchment);}
+  .day-card-date .dc-mon{font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--parchment-dim); margin-top:1px;}
+  .day-card-body{flex:1; background:var(--ink-3); border:1px solid var(--hairline); border-radius:10px; padding:10px 12px; position:relative; overflow:hidden;}
+  .day-card-body::before{content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent, var(--hairline)); border-radius:3px 0 0 3px;}
+  .day-card-title{font-size:13px; font-weight:700; color:var(--parchment); margin-bottom:4px; line-height:1.3;}
+  .day-card-detail{font-size:12.5px; color:var(--parchment-dim); line-height:1.55;}
+  .day-card.today .day-card-body{border-color:var(--accent, var(--amber)); box-shadow:0 0 0 1px var(--accent, var(--amber))22;}
+  .day-card.today .day-card-date .dc-day{color:var(--accent, var(--amber));}
 
   .empty-note{font-size:12.5px; color:var(--parchment-dim); text-align:center; margin-top:24px; line-height:1.6;}
 
@@ -429,7 +440,7 @@
 
     <div id="paneDetails">
       <div class="row"><div class="label">Status</div><div class="val" id="sStatus"></div></div>
-      <div class="row"><div class="label">Plan</div><div class="val" id="sPlan"></div></div>
+      <div class="row" id="sPlanRow"><div class="label">Plan</div><div id="sPlan"></div></div>
       <div class="row" id="sNotesRow"><div class="label">Notes</div><div class="val" id="sNotes"></div></div>
       <div class="row" id="sBookingRow"><div class="label">Booking needed</div><div class="val" id="sBooking"></div></div>
     </div>
@@ -940,13 +951,78 @@ function switchTab(tab){
   }
 }
 
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function renderPlan(plan, leg){
+  if(!plan || !plan.trim()) return '<div style="color:var(--parchment-dim); font-size:13px;">No plan added yet.</div>';
+
+  // Detect day-by-day format: lines starting with e.g. "Tue 14 Jul" or "Mon 20 Jul"
+  const dayPattern = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/;
+  const lines = plan.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+
+  // Try to split into day blocks
+  const blocks = [];
+  let current = null;
+  lines.forEach(function(line){
+    const m = line.match(dayPattern);
+    if(m){
+      if(current) blocks.push(current);
+      current = {header: line, body: ''};
+    } else if(current){
+      current.body += (current.body ? ' ' : '') + line;
+    } else {
+      // plain text before any day header
+      blocks.push({header: null, body: line});
+    }
+  });
+  if(current) blocks.push(current);
+
+  // If no day structure detected, fall back to plain readable text
+  if(!blocks.some(function(b){ return b.header; })){
+    return '<div style="font-size:14px; line-height:1.65; color:var(--parchment);">'+plan.replace(/\n/g,'<br>')+'</div>';
+  }
+
+  const todayStr = new Date().toISOString().slice(0,10);
+  const accent = leg ? (COUNTRY_META[leg.country] || {}).accent || 'var(--amber)' : 'var(--amber)';
+
+  return blocks.map(function(block){
+    if(!block.header){
+      return '<div style="font-size:13px; color:var(--parchment-dim); margin-bottom:10px; line-height:1.5;">'+block.body+'</div>';
+    }
+    const m = block.header.match(/^(\w+)\s+(\d{1,2})\s+(\w+)(.*)/);
+    const dow = m ? m[1] : '';
+    const dayNum = m ? m[2] : '';
+    const mon = m ? m[3] : '';
+    // rest of header after date
+    const titleRaw = m ? m[4].replace(/^[\s—\-–]+/, '') : block.header;
+
+    // Detect if today
+    const monthIdx = MONTHS_SHORT.indexOf(mon);
+    let isToday = false;
+    if(monthIdx !== -1 && dayNum){
+      const cardDate = new Date(2026, monthIdx, parseInt(dayNum)).toISOString().slice(0,10);
+      isToday = (cardDate === todayStr);
+    }
+
+    const detail = block.body ? '<div class="day-card-detail">'+block.body+'</div>' : '';
+    return '<div class="day-card'+(isToday?' today':'')+'" style="--accent:'+accent+';">'
+      + '<div class="day-card-date"><div class="dc-dow">'+dow+'</div><div class="dc-day">'+dayNum+'</div><div class="dc-mon">'+mon+'</div></div>'
+      + '<div class="day-card-body">'
+        + (titleRaw ? '<div class="day-card-title">'+titleRaw+'</div>' : '')
+        + detail
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
 function openSheet(id){
   const d = DATA.find(function(x){ return x.id===id; });
   if(!d) return;
   document.getElementById('sLoc').textContent = d.loc;
   document.getElementById('sDates').textContent = d.dates + (d.priority ? '  ·  priority: '+d.priority : '');
   document.getElementById('sStatus').innerHTML = statusPill(d.status);
-  document.getElementById('sPlan').textContent = d.plan;
+  document.getElementById('sPlan').innerHTML = renderPlan(d.plan, d);
   document.getElementById('sBooking').textContent = d.booking || '—';
   document.getElementById('sBookingRow').style.display = d.booking ? 'block':'none';
   document.getElementById('sNotes').textContent = d.notes || '';
