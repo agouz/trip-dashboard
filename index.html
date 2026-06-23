@@ -537,6 +537,19 @@ function renderBanner(){
   document.getElementById('banner').onclick = function(){ openSheet(c.id); };
 }
 
+function legDays(d){
+  if(!d.start_date || !d.end_date) return '';
+  const diff = Math.round((new Date(d.end_date+'T00:00:00') - new Date(d.start_date+'T00:00:00')) / 86400000);
+  return diff > 0 ? diff+'d' : '1d';
+}
+function countryTotalDays(legs){
+  const first = legs.find(function(l){ return l.start_date; });
+  const last = [...legs].reverse().find(function(l){ return l.end_date; });
+  if(!first || !last) return '';
+  const diff = Math.round((new Date(last.end_date+'T00:00:00') - new Date(first.start_date+'T00:00:00')) / 86400000);
+  return diff > 0 ? diff+'d' : '';
+}
+
 function groupByCountry(){
   const groups = [];
   const order = [];
@@ -571,7 +584,7 @@ function renderCountries(){
       return '<div class="leg" onclick="event.stopPropagation(); openSheet('+l.id+')">'
         + '<div class="leg-card" style="--barcolor:'+meta.accent+'">'
         + '<div class="leg-top"><div><div class="leg-loc">'+l.loc+'</div>'
-        + '<div class="leg-dates">'+l.dates+'</div></div>'+statusPill(l.status)+'</div>'
+        + '<div class="leg-dates">'+l.dates+(legDays(l) ? ' · '+legDays(l) : '')+'</div></div>'+statusPill(l.status)+'</div>'
         + (l.priority ? '<div class="prio mono">priority: '+l.priority+'</div>' : '')
         + (bkCount ? '<div class="booking-badge">🧾 '+bkCount+' booking'+(bkCount>1?'s':'')+'</div>' : '')
         + '</div></div>';
@@ -584,7 +597,7 @@ function renderCountries(){
       + '<div class="country-head-info">'
       + '<div class="country-flag">'+meta.flag+'</div>'
       + '<div class="country-main"><div class="country-name">'+meta.name+'</div>'
-      + '<div class="country-dates mono">'+g.start+' – '+g.end+'</div></div>'
+      + '<div class="country-dates mono">'+g.start+' – '+g.end+(countryTotalDays(g.legs) ? ' · '+countryTotalDays(g.legs) : '')+'</div></div>'
       + '<div class="country-status"><div class="status-bar">'+bars+'</div><div class="chev">›</div></div>'
       + '</div>'
       + '</div><div class="country-body">'+legsHtml+'</div></div>';
