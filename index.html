@@ -1712,7 +1712,8 @@ async function initDashboard(){
   await loadPrep();
   document.getElementById('retrySaveBtn').onclick = retrySave;
   const bookedCount = DATA.filter(function(d){ return d.status==='booked'; }).length;
-  document.getElementById('dayCount').textContent = bookedCount+'/'+DATA.length+' legs locked';
+  const dayCountEl = document.getElementById('dayCount');
+  if(dayCountEl) dayCountEl.textContent = bookedCount+'/'+DATA.length+' legs locked';
   renderBanner();
   renderCountries();
   renderRail();
