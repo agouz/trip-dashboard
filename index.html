@@ -197,7 +197,19 @@
   .diary-mood-btn{font-size:22px; padding:6px 10px; border-radius:8px; background:var(--ink-3); border:2px solid transparent; cursor:pointer;}
   .diary-mood-btn.selected{border-color:var(--amber);}
   .diary-save-btn{width:100%; background:var(--amber); color:var(--ink); border:none; border-radius:10px; padding:13px; font-weight:700; font-size:15px; margin-top:8px; cursor:pointer; font-family:'Space Grotesk',sans-serif;}
-  .diary-loc-preview{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--amber); margin-top:5px;}
+  .diary-photo-picker{display:flex; align-items:center; gap:10px; border:1.5px dashed var(--hairline); border-radius:10px; padding:12px 14px; cursor:pointer; margin-bottom:10px;}
+  .diary-photo-picker:active{background:rgba(255,255,255,0.04);}
+  .diary-photo-previews{display:flex; gap:8px; flex-wrap:wrap;}
+  .diary-photo-thumb{position:relative; width:72px; height:72px; border-radius:8px; overflow:hidden; border:1px solid var(--hairline); flex-shrink:0;}
+  .diary-photo-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .diary-photo-thumb .remove-photo{position:absolute; top:2px; right:2px; width:18px; height:18px; border-radius:50%; background:rgba(0,0,0,0.7); color:#fff; font-size:11px; display:flex; align-items:center; justify-content:center; cursor:pointer; line-height:1; border:none;}
+  .diary-photo-uploading{opacity:0.5;}
+  .diary-card-photos{display:flex; gap:6px; overflow-x:auto; margin-top:10px; padding-bottom:2px; -webkit-overflow-scrolling:touch;}
+  .diary-card-photos::-webkit-scrollbar{display:none;}
+  .diary-card-photo{width:90px; height:90px; border-radius:8px; object-fit:cover; flex-shrink:0; cursor:pointer; border:1px solid var(--hairline);}
+  .diary-photo-lightbox{position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:400; display:flex; align-items:center; justify-content:center;}
+  .diary-photo-lightbox img{max-width:96vw; max-height:90vh; border-radius:8px; object-fit:contain;}
+  .diary-photo-lightbox-close{position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.15); border:none; color:#fff; font-size:22px; width:38px; height:38px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;}
 
   /* ---- Calendar ---- */
   .cal-legend{display:flex; flex-wrap:wrap; gap:9px 14px; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--hairline);}
@@ -423,6 +435,15 @@
       <textarea id="diaryBodyInput" placeholder="Write freely — highlights, surprises, how it felt, what you'd tell a friend…"></textarea>
     </div>
     <div class="diary-field">
+      <label>Photos <span style="opacity:0.5">(optional)</span></label>
+      <input type="file" id="diaryPhotoInput" accept="image/*" multiple style="display:none" onchange="handleDiaryPhotos(this)">
+      <div class="diary-photo-picker" onclick="document.getElementById('diaryPhotoInput').click()">
+        <span style="font-size:22px;">📷</span>
+        <span style="font-size:13px; color:var(--parchment-dim);">Tap to add photos from camera or library</span>
+      </div>
+      <div class="diary-photo-previews" id="diaryPhotoPreviews"></div>
+    </div>
+    <div class="diary-field">
       <label>Mood</label>
       <div class="diary-mood-row" id="diaryMoodRow">
         <button class="diary-mood-btn" onclick="selectMood(this,'🤩')">🤩</button>
@@ -438,6 +459,11 @@
     </div>
     <button class="diary-save-btn" onclick="saveDiaryEntry()">Save Entry</button>
   </div>
+</div>
+
+<div class="diary-photo-lightbox" id="diaryLightbox" style="display:none;" onclick="closeLightbox()">
+  <img id="diaryLightboxImg" src="" alt="">
+  <button class="diary-photo-lightbox-close" onclick="closeLightbox()">×</button>
 </div>
 
 <div id="addModalOverlay">
@@ -754,6 +780,7 @@ function renderCalendar(){
 let DIARY_ENTRIES = [];
 let selectedMood = '';
 let DIARY_RENDERED = false;
+let pendingDiaryPhotos = [];
 
 function getLegForDate(dateStr){
   return DATA.find(function(d){
@@ -766,12 +793,17 @@ function openDiaryModal(){
   document.getElementById('diaryDateInput').value = today;
   document.getElementById('diaryTitleInput').value = '';
   document.getElementById('diaryBodyInput').value = '';
+  document.getElementById('diaryPhotoInput').value = '';
   selectedMood = '';
+  pendingDiaryPhotos = [];
   document.querySelectorAll('.diary-mood-btn').forEach(function(b){ b.classList.remove('selected'); });
+  document.getElementById('diaryPhotoPreviews').innerHTML = '';
   updateDiaryLocPreview(today);
   document.getElementById('diaryModalOverlay').classList.add('open');
 }
 function closeDiaryModal(){
+  pendingDiaryPhotos.forEach(function(p){ if(p) URL.revokeObjectURL(p.objectUrl); });
+  pendingDiaryPhotos = [];
   document.getElementById('diaryModalOverlay').classList.remove('open');
 }
 function selectMood(btn, mood){
@@ -790,22 +822,77 @@ document.addEventListener('DOMContentLoaded', function(){
   if(di) di.addEventListener('change', function(){ updateDiaryLocPreview(this.value); });
 });
 
+function handleDiaryPhotos(input){
+  const preview = document.getElementById('diaryPhotoPreviews');
+  Array.from(input.files).forEach(function(file){
+    const objectUrl = URL.createObjectURL(file);
+    const idx = pendingDiaryPhotos.length;
+    pendingDiaryPhotos.push({file: file, objectUrl: objectUrl});
+    const thumb = document.createElement('div');
+    thumb.className = 'diary-photo-thumb';
+    thumb.id = 'dthumb-'+idx;
+    thumb.innerHTML = '<img src="'+objectUrl+'"><button class="remove-photo" onclick="removePendingPhoto('+idx+')">\u00D7</button>';
+    preview.appendChild(thumb);
+  });
+  input.value = '';
+}
+function removePendingPhoto(idx){
+  if(pendingDiaryPhotos[idx]) URL.revokeObjectURL(pendingDiaryPhotos[idx].objectUrl);
+  pendingDiaryPhotos[idx] = null;
+  const thumb = document.getElementById('dthumb-'+idx);
+  if(thumb) thumb.remove();
+}
+async function uploadDiaryPhoto(file, entryId){
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = entryId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+  const { data, error } = await authClient.storage.from('diary-photos').upload(path, file, {contentType: file.type, upsert: false});
+  if(error) throw new Error('Upload failed: ' + error.message);
+  return data.path;
+}
+function getDiaryPhotoUrl(path){
+  return SUPABASE_URL + '/storage/v1/object/public/diary-photos/' + path;
+}
+function openLightbox(url){
+  document.getElementById('diaryLightboxImg').src = url;
+  document.getElementById('diaryLightbox').style.display = 'flex';
+}
+function closeLightbox(){
+  document.getElementById('diaryLightbox').style.display = 'none';
+  document.getElementById('diaryLightboxImg').src = '';
+}
+
 async function saveDiaryEntry(){
   const dateStr = document.getElementById('diaryDateInput').value;
   const title = document.getElementById('diaryTitleInput').value.trim();
   const body = document.getElementById('diaryBodyInput').value.trim();
   if(!dateStr || !body){ alert('Date and entry text are required.'); return; }
+  const saveBtn = document.querySelector('.diary-save-btn');
+  saveBtn.textContent = 'Saving…'; saveBtn.disabled = true;
   const leg = getLegForDate(dateStr);
   try{
     const inserted = await sb('diary_entries', {
-      method:'POST',
-      headers:{'Prefer':'return=representation'},
-      body: JSON.stringify({ entry_date: dateStr, leg_id: leg ? leg.id : null, title: title || null, body: body, mood: selectedMood || null })
+      method:'POST', headers:{'Prefer':'return=representation'},
+      body: JSON.stringify({entry_date:dateStr, leg_id:leg?leg.id:null, title:title||null, body:body, mood:selectedMood||null, photos:[]})
     });
-    DIARY_ENTRIES.unshift(inserted[0]);
+    const entry = inserted[0];
+    const valid = pendingDiaryPhotos.filter(Boolean);
+    const photos = [];
+    for(let i=0; i<valid.length; i++){
+      saveBtn.textContent = 'Uploading photo '+(i+1)+'/'+valid.length+'…';
+      photos.push(await uploadDiaryPhoto(valid[i].file, entry.id));
+    }
+    if(photos.length){
+      await sb('diary_entries?id=eq.'+entry.id, {method:'PATCH', headers:{'Prefer':'return=representation'}, body:JSON.stringify({photos:photos})});
+      entry.photos = photos;
+    }
+    DIARY_ENTRIES.unshift(entry);
     renderDiary();
     closeDiaryModal();
-  }catch(e){ showSaveStatus('error: ' + e.message); }
+  }catch(e){
+    showSaveStatus('error: '+e.message);
+  }finally{
+    saveBtn.textContent = 'Save Entry'; saveBtn.disabled = false;
+  }
 }
 
 async function loadDiary(){
@@ -815,46 +902,39 @@ async function loadDiary(){
 function renderDiary(){
   const el = document.getElementById('diaryEntries');
   const sub = document.getElementById('diarySubheading');
-  if(sub) sub.textContent = DIARY_ENTRIES.length + ' ' + (DIARY_ENTRIES.length === 1 ? 'entry' : 'entries') + ' · Dark Knight Travels';
-
+  if(sub) sub.textContent = DIARY_ENTRIES.length + (DIARY_ENTRIES.length===1?' entry':' entries') + ' · Dark Knight Travels';
   if(!DIARY_ENTRIES.length){
-    el.innerHTML = '<div class="diary-empty">'
-      + '<div class="diary-empty-icon">✍️</div>'
-      + '<div class="diary-empty-title">No entries yet</div>'
-      + '<div class="diary-empty-sub">Start writing when the trip begins — or add pre-trip thoughts now. Every entry gets saved here and can help you build a trip diary later.</div>'
-      + '</div>';
+    el.innerHTML = '<div class="diary-empty"><div class="diary-empty-icon">✍️</div><div class="diary-empty-title">No entries yet</div><div class="diary-empty-sub">Start writing when the trip begins — or add pre-trip thoughts now. Every entry gets saved here and can help you build a trip diary later.</div></div>';
     return;
   }
-
-  // Group by month
   const groups = {};
   DIARY_ENTRIES.forEach(function(e){
-    const d = new Date(e.entry_date + 'T12:00:00');
-    const key = d.toLocaleDateString('en-AU', {month:'long', year:'numeric'});
-    if(!groups[key]) groups[key] = [];
+    const d = new Date(e.entry_date+'T12:00:00');
+    const key = d.toLocaleDateString('en-AU',{month:'long',year:'numeric'});
+    if(!groups[key]) groups[key]=[];
     groups[key].push(e);
   });
-
   el.innerHTML = Object.keys(groups).map(function(month){
     const entries = groups[month].map(function(e){
-      const leg = DATA.find(function(d){ return d.id === e.leg_id; });
-      const country = leg ? leg.country : null;
-      const meta = country ? (COUNTRY_META[country] || null) : null;
+      const leg = DATA.find(function(d){ return d.id===e.leg_id; });
+      const meta = leg && COUNTRY_META[leg.country] ? COUNTRY_META[leg.country] : null;
       const accent = meta ? meta.accent : '#B9B2A0';
-      const accentSoft = accent + '1A';
-      const accentBorder = accent + '55';
-      const d = new Date(e.entry_date + 'T12:00:00');
-      const dateLabel = d.toLocaleDateString('en-AU', {weekday:'short', day:'numeric', month:'short'});
-      const locLabel = leg ? leg.loc : (e.entry_date < '2026-07-14' ? 'Sydney · Pre-trip' : '');
-      return '<div class="diary-entry" style="--entry-accent:'+accent+'; --entry-accent-soft:'+accentSoft+'; --entry-accent-border:'+accentBorder+';" onclick="this.classList.toggle(\'expanded\')">'
-        + '<div class="diary-entry-top">'
-        + '<span class="diary-entry-date">'+dateLabel+'</span>'
-        + (locLabel ? '<span class="diary-entry-loc">'+locLabel+'</span>' : '')
-        + (e.mood ? '<span class="diary-entry-mood">'+e.mood+'</span>' : '')
-        + '</div>'
-        + (e.title ? '<div class="diary-entry-title">'+e.title+'</div>' : '')
-        + '<div class="diary-entry-body">'+e.body.replace(/\n/g,'<br>')+'</div>'
-        + '</div>';
+      const d = new Date(e.entry_date+'T12:00:00');
+      const dateLabel = d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+      const locLabel = leg ? leg.loc : (e.entry_date<'2026-07-14'?'Sydney · Pre-trip':'');
+      const photos = (e.photos && e.photos.length) ? e.photos : [];
+      const photoStrip = photos.length ? '<div class="diary-card-photos">'+photos.map(function(p){
+        const url = getDiaryPhotoUrl(p);
+        return '<img class="diary-card-photo" src="'+url+'" loading="lazy" onclick="event.stopPropagation();openLightbox(\"'+url+'\")">'; 
+      }).join('')+'</div>' : '';
+      return '<div class="diary-entry" style="--entry-accent:'+accent+';--entry-accent-soft:'+accent+'1A;--entry-accent-border:'+accent+'55;" onclick="this.classList.toggle(&apos;expanded&apos;)">'
+        +'<div class="diary-entry-top"><span class="diary-entry-date">'+dateLabel+'</span>'
+        +(locLabel?'<span class="diary-entry-loc">'+locLabel+'</span>':'')
+        +(e.mood?'<span class="diary-entry-mood">'+e.mood+'</span>':'')
+        +'</div>'
+        +(e.title?'<div class="diary-entry-title">'+e.title+'</div>':'')
+        +'<div class="diary-entry-body">'+e.body.replace(/\n/g,'<br>')+'</div>'
+        +photoStrip+'</div>';
     }).join('');
     return '<div class="diary-month-group"><div class="diary-month-label">'+month+'</div>'+entries+'</div>';
   }).join('');
