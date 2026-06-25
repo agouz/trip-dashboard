@@ -528,7 +528,6 @@
           <option value="Bolivia">🇧🇴 Bolivia</option>
           <option value="Argentina">🇦🇷 Argentina</option>
           <option value="Brazil">🇧🇷 Brazil</option>
-          <option value="China">🇨🇳 China</option>
           <option value="General">📋 General</option>
         </select>
       </div>
@@ -574,7 +573,6 @@ const COUNTRY_META = {
   Bolivia:{flag:"🇧🇴",name:"Bolivia",accent:"#3FB8B0"},
   Argentina:{flag:"🇦🇷",name:"Argentina",accent:"#5C9BD9"},
   Brazil:{flag:"🇧🇷",name:"Brazil",accent:"#7FBF4D"},
-  China:{flag:"🇨🇳",name:"China",accent:"#A8729E"}
 };
 
 const PRIO_RANK = {"\ud83d\udea8 High":1,"\ud83d\udfe1 Medium":2,"\ud83d\udfe2 Low":3,"\ud83d\udfe2 watch":3.5,null:4};
@@ -685,7 +683,6 @@ const COUNTRY_IMG = {
   Bolivia:   "https://images.unsplash.com/photo-1528161498624-89b0174b714d?w=700&h=200&fit=crop&crop=center&q=80", // Uyuni mirror sky by B
   Argentina: "https://images.unsplash.com/photo-1656856747603-1777348793e6?w=700&h=200&fit=crop&crop=center&q=80", // Iguazú Falls panoramic by Nadine Marfurt
   Brazil:    "https://images.unsplash.com/photo-1537798518344-7ee3acb6e6d1?w=700&h=200&fit=crop&crop=center&q=80", // Rio de Janeiro sunset by Peter Conlan
-  China:     "https://images.unsplash.com/photo-1650189222404-cf60dc90eae5?w=700&h=200&fit=crop&crop=center&q=80", // Great Wall by gabriel xu
 };
 
 function renderCountries(){
@@ -944,7 +941,7 @@ function toggleCountry(i){
   document.getElementById('country-'+i).classList.toggle('open');
 }
 
-const COUNTRY_ISO = {"840":"USA","484":"Mexico","320":"Guatemala","604":"Peru","068":"Bolivia","032":"Argentina","076":"Brazil","156":"China"};
+const COUNTRY_ISO = {"840":"USA","484":"Mexico","320":"Guatemala","604":"Peru","068":"Bolivia","032":"Argentina","076":"Brazil","076":"Brazil"};
 let MAP_ZOOM = null, MAP_SVG = null, MAP_G = null, MAP_K0 = 1.8;
 
 async function renderMap(){
@@ -1136,7 +1133,7 @@ function renderRail(){
   const caption = document.getElementById('railCaption');
   if(!groups.length){ rail.innerHTML=''; caption.textContent=''; return; }
 
-  const NOMINAL_OPEN_DAYS = 14; // for legs with no end_date yet (e.g. China TBD)
+  const NOMINAL_OPEN_DAYS = 14; // for open-ended legs
   const spans = groups.map(function(g){
     const firstLeg = g.legs[0], lastLeg = g.legs[g.legs.length-1];
     const start = firstLeg.start_date ? new Date(firstLeg.start_date+'T00:00:00') : null;
@@ -1402,7 +1399,7 @@ function renderCosts(){
       + '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%"></div></div></div>';
   }).join('');
 
-  const countryOrder = ["USA","Mexico","Guatemala","Peru","Bolivia","Argentina","Brazil","China","General"];
+  const countryOrder = ["USA","Mexico","Guatemala","Peru","Bolivia","Argentina","Brazil","General"];
   const countryHtml = countryOrder.filter(function(c){ return byCountry[c]; }).map(function(c){
     const meta = COUNTRY_META[c] || {flag:"📋",name:c,accent:"#B9B2A0"};
     return '<div class="country-cost-row" onclick="showCostDetail(\'country\',\''+c+'\')"><div class="ccr-left"><div class="ccr-dot" style="background:'+meta.accent+';"></div><div class="ccr-flag">'+meta.flag+'</div><div class="ccr-name">'+meta.name+'</div></div>'
@@ -1442,7 +1439,6 @@ function renderOther(){
       {label:"NYC accommodation switch", val:"Only worth it for a clear $300+ saving with strong reviews."},
       {label:"Bus vs flight", val:"Only take the bus over flying if it saves $150+ — otherwise the fatigue/risk isn't worth it."},
       {label:"Yosemite-style detours", val:"A longer daily drive is tolerable for big savings — e.g. ~50min/day was accepted for ~$800."},
-      {label:"China leg", val:"Default lean is to drop it unless return flights are unusually cheap — single biggest lever on the $20k target ($5k–$8k AUD)."}
     ]}
   ];
   el.innerHTML = sections.map(function(s,i){
@@ -1673,7 +1669,7 @@ function getCurrentLeg(){
   const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   let match = DATA.find(function(d){ return d.start_date && d.end_date && todayStr>=d.start_date && todayStr<=d.end_date; });
   if(!match){
-    // open-ended leg (e.g. China TBD with no end_date) or before/after trip — fall back to nearest
+    // open-ended leg or before/after trip — fall back to nearest
     const openEnded = DATA.filter(function(d){ return d.start_date && !d.end_date && todayStr>=d.start_date; });
     if(openEnded.length) match = openEnded[openEnded.length-1];
   }
