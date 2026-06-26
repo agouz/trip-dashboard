@@ -49,15 +49,16 @@
   .side-nav-item.logout{color:var(--rust);}
   .side-nav-spacer{flex:1;}
   .sn-divider{height:1px; background:var(--hairline); margin:8px 0;}
-  .sn-expand-item{border-radius:10px; overflow:hidden; margin-bottom:3px;}
-  .sn-expand-head{display:flex; align-items:center; gap:12px; padding:12px 12px; color:var(--parchment-dim); font-weight:600; font-size:15px; cursor:pointer;}
-  .sn-expand-head:active{background:rgba(255,255,255,0.04);}
-  .sn-expand-item.open .sn-expand-head{color:var(--parchment);}
-  .sn-chev{margin-left:auto; font-size:13px; transition:transform 0.2s ease; display:inline-block;}
-  .sn-expand-item.open .sn-chev{transform:rotate(90deg);}
-  .sn-expand-body{display:none; padding:0 10px 10px 44px;}
-  .sn-expand-item.open .sn-expand-body{display:block;}
-  .sn-info-item{font-size:12px; color:var(--parchment-dim); line-height:1.5; margin-bottom:10px;}
+  .info-page-title{font-size:22px; font-weight:700; margin-bottom:4px;}
+  .info-page-sub{font-size:12px; color:var(--parchment-dim); margin-bottom:20px; font-family:'IBM Plex Mono',monospace;}
+  .info-card{background:var(--ink-2); border:1px solid var(--hairline); border-radius:12px; padding:15px 16px; margin-bottom:10px; position:relative; overflow:hidden;}
+  .info-card::before{content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--card-accent, var(--hairline));}
+  .info-card-label{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--amber); margin-bottom:6px;}
+  .info-card-val{font-size:14px; line-height:1.6; color:var(--parchment);}
+  .info-card-status{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; padding:2px 8px; border-radius:20px; margin-top:8px;}
+  .info-card-status.done{background:rgba(107,142,99,0.18); color:var(--moss); border:1px solid rgba(107,142,99,0.4);}
+  .info-card-status.pending{background:rgba(227,163,59,0.18); color:var(--amber); border:1px solid rgba(227,163,59,0.4);}
+  .info-section-head{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--parchment-dim); margin:18px 0 8px;}
   .sn-info-label{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:2px;}
 
 
@@ -355,27 +356,8 @@
     <div class="side-nav-item" data-tab="diary" onclick="navigateTo('diary')"><span class="sn-ic">📖</span> Diary</div>
     <div class="side-nav-item" data-tab="costs" onclick="navigateTo('costs')"><span class="sn-ic">💰</span> Costs</div>
     <div class="side-nav-item" data-tab="prep" onclick="navigateTo('prep')"><span class="sn-ic">🎒</span> Prep</div>
-
-    <div class="sn-divider"></div>
-
     <div class="side-nav-item" data-tab="health" onclick="navigateTo('health')"><span class="sn-ic">💉</span> Health</div>
     <div class="side-nav-item" data-tab="visas" onclick="navigateTo('visas')"><span class="sn-ic">🛂</span> Visas</div>
-    <div style="display:none" id="snHealth">
-      <div class="sn-expand-body">
-        <div class="sn-info-item"><div class="sn-info-label">Hep A vaccination</div>Received 9 Jun 2026.</div>
-        <div class="sn-info-item"><div class="sn-info-label">Yellow fever</div>Received 9 Jun 2026. Carry certificate while travelling.</div>
-        <div class="sn-info-item"><div class="sn-info-label">Malaria meds</div>Start 1 day before Amazon (17 Sep), continue 7 days after (29 Sep). Carry-on only, original packaging.</div>
-        <div class="sn-info-item"><div class="sn-info-label">Altitude meds</div>Half tablet morning, half tablet night. Cusco → Sacred Valley → Machu Picchu → La Paz → Uyuni.</div>
-      </div>
-    </div>
-
-    <div style="display:none" id="snVisas">
-      <div class="sn-expand-body">
-        <div class="sn-info-item"><div class="sn-info-label">US ESTA</div>Approved. Keep answer simple at border: tourism, NYC → LA/Yosemite/Vegas → Mexico 1 Aug.</div>
-        <div class="sn-info-item"><div class="sn-info-label">Brazil eVisa</div>Approved for Australian passport.</div>
-        <div class="sn-info-item"><div class="sn-info-label">Offline docs</div>Passport, ESTA, flights, hotels, car rental, insurance, Machu Picchu ticket, PeruRail tickets.</div>
-      </div>
-    </div>
     <div class="side-nav-spacer"></div>
     <div class="side-nav-item logout" onclick="doLogout()"><span class="sn-ic">🚪</span> Log out</div>
   </nav>
@@ -442,54 +424,8 @@
   <div id="tab-prep" style="display:none;"></div>
 
   <div id="tab-other" style="display:none;"></div>
-
-  <div id="tab-health" style="display:none; padding:16px;">
-    <div style="font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; color:var(--parchment); margin-bottom:16px;">💉 Health</div>
-    <div style="display:flex; flex-direction:column; gap:12px;">
-      <div style="background:var(--ink-2); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px;">
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Hep A Vaccination</div>
-        <div style="font-size:14px; color:var(--parchment-dim); line-height:1.5;">Received 9 Jun 2026.</div>
-      </div>
-      <div style="background:var(--ink-2); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px;">
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Yellow Fever</div>
-        <div style="font-size:14px; color:var(--parchment-dim); line-height:1.5;">Received 9 Jun 2026. Carry certificate while travelling.</div>
-      </div>
-      <div style="background:var(--ink-2); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px;">
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Malaria Medication</div>
-        <div style="font-size:14px; color:var(--parchment-dim); line-height:1.5;">Start 1 day before Amazon (17 Sep), continue 7 days after (29 Sep). Carry-on only in original packaging.</div>
-      </div>
-      <div style="background:var(--ink-2); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px;">
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Altitude Medication</div>
-        <div style="font-size:14px; color:var(--parchment-dim); line-height:1.5;">Half tablet morning, half tablet night. Cusco → Sacred Valley → Machu Picchu → La Paz → Uyuni.</div>
-      </div>
-      <div style="background:var(--ink-2); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px;">
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Medicine Kit Checklist</div>
-        <div style="font-size:14px; color:var(--parchment-dim); line-height:1.5;">Malaria meds · Altitude meds · Usual meds · Prescriptions · Vaccination certificates. Keep all in carry-on, original packaging.</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="tab-visas" style="display:none; padding:16px;">
-    <div style="font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; color:var(--parchment); margin-bottom:16px;">🛂 Visas &amp; Entry</div>
-    <div style="display:flex; flex-direction:column; gap:12px;">
-      <div style="background:var(--ink-2); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px;">
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">US ESTA</div>
-        <div style="font-size:14px; color:var(--parchment-dim); line-height:1.5;">✅ Approved. Keep answer simple at border: tourism, NYC → LA/Yosemite/Vegas → Mexico 1 Aug.</div>
-      </div>
-      <div style="background:var(--ink-2); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px;">
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Brazil eVisa</div>
-        <div style="font-size:14px; color:var(--parchment-dim); line-height:1.5;">✅ Approved for Australian passport.</div>
-      </div>
-      <div style="background:var(--ink-2); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px;">
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Countries — No Visa Required</div>
-        <div style="font-size:14px; color:var(--parchment-dim); line-height:1.5;">Mexico · Guatemala · Peru · Bolivia · Argentina — Australian passport enters visa-free.</div>
-      </div>
-      <div style="background:var(--ink-2); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px;">
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Offline Docs to Carry</div>
-        <div style="font-size:14px; color:var(--parchment-dim); line-height:1.5;">Passport · ESTA · Flights · Hotels · Car rental · Insurance · Machu Picchu ticket · PeruRail tickets · Yellow fever certificate.</div>
-      </div>
-    </div>
-  </div>
+  <div id="tab-health" style="display:none;"></div>
+  <div id="tab-visas" style="display:none;"></div>
 
   <div class="empty-note">Costs reflect everything logged so far, paid or not.</div>
 </div>
@@ -1501,6 +1437,44 @@ function renderCosts(){
 }
 
 /* ============ OTHER ============ */
+function renderHealth(){
+  const el = document.getElementById('tab-health');
+  el.innerHTML = '<div class="info-page-title">💉 Health</div>'
+    + '<div class="info-page-sub">Vaccinations · Medications · Reminders</div>'
+    + '<div class="info-section-head">Vaccinations</div>'
+    + card('Hepatitis A', 'Received 9 Jun 2026.', 'done', '✅ Done', '#6B8E63')
+    + card('Yellow fever', 'Received 9 Jun 2026. Carry the certificate while travelling — required for Amazon entry.', 'done', '✅ Done', '#6B8E63')
+    + '<div class="info-section-head">Medications</div>'
+    + card('Malaria medication', 'Start 1 day before Amazon entry (17 Sep). Continue through Amazon stay. Stop 7 days after leaving (29 Sep). Carry-on only, original packaging.', 'pending', '🟡 Buy before departure', '#E3A33B')
+    + card('Altitude medication', 'Half tablet in the morning, half tablet at night. Active during: Cusco → Sacred Valley → Machu Picchu → La Paz → Uyuni.', 'done', '✅ Done', '#6B8E63')
+    + '<div class="info-section-head">Reminders</div>'
+    + card('Medication packing rule', 'All prescription meds in original packaging, carry-on only — never in checked luggage. Include vaccination certificates.', 'pending', '📋 Check before packing', '#4D7A95')
+    + card('Amazon timing note', 'Malaria meds: start 17 Sep, stop 29 Sep (based on 18–22 Sep Amazon dates). Recalculate if dates shift.', 'pending', '📋 Confirm when Amazon booked', '#4D7A95');
+}
+function renderVisas(){
+  const el = document.getElementById('tab-visas');
+  el.innerHTML = '<div class="info-page-title">🛂 Visas & Docs</div>'
+    + '<div class="info-page-sub">Entry requirements · Border notes · Offline documents</div>'
+    + '<div class="info-section-head">Entry Documents</div>'
+    + card('US ESTA', 'Approved. Confirmation #27UGCDED. At the border keep the answer simple: tourism, NYC → LA/Yosemite/Vegas → Mexico City 1 Aug. Don\'t volunteer the full itinerary.', 'done', '✅ Approved', '#6B8E63')
+    + card('Brazil eVisa', 'Approved for Australian passport. Have the confirmation ready on your phone when entering Brazil from Foz do Iguaçu.', 'done', '✅ Approved', '#6B8E63')
+    + card('Guatemala', 'Australian passport — visa on arrival. No pre-approval needed.', 'done', '✅ No visa needed', '#6B8E63')
+    + card('Peru', 'Australian passport — visa on arrival. No pre-approval needed.', 'done', '✅ No visa needed', '#6B8E63')
+    + card('Bolivia', 'Australian passport — visa on arrival. No pre-approval needed.', 'done', '✅ No visa needed', '#6B8E63')
+    + card('Argentina', 'Australian passport — visa on arrival. No pre-approval needed.', 'done', '✅ No visa needed', '#6B8E63')
+    + card('Mexico', 'Australian passport — visa on arrival. No pre-approval needed.', 'done', '✅ No visa needed', '#6B8E63')
+    + '<div class="info-section-head">Offline Documents to Carry</div>'
+    + card('Must have offline', 'Passport photo page · ESTA approval · All flight confirmations · All accommodation confirmations · Car rental (Hertz) · Travel insurance certificate · IDP (International Driving Permit) · Machu Picchu ticket · PeruRail tickets · Brazil eVisa', 'pending', '📋 Save before departure', '#4D7A95')
+    + card('Cash note', 'Bolivia and Guatemala require clean, undamaged USD bills — worn or torn notes are refused. Source crisp bills in Sydney before departing.', 'pending', '📋 Sort before 14 Jul', '#E3A33B');
+}
+function card(label, val, statusClass, statusText, accent){
+  return '<div class="info-card" style="--card-accent:'+accent+';">'
+    + '<div class="info-card-label">'+label+'</div>'
+    + '<div class="info-card-val">'+val+'</div>'
+    + '<div class="info-card-status '+statusClass+'">'+statusText+'</div>'
+    + '</div>';
+}
+
 function renderOther(){
   const el = document.getElementById('tab-other');
   const sections = [
@@ -1821,7 +1795,7 @@ async function addCostEntry(cat, amount, country, note){
 }
 
 /* ============ MAIN TABS + COUNTDOWN ============ */
-const MAIN_TABS = ['itinerary','map','calendar','diary','costs','prep','health','visas'];
+const MAIN_TABS = ['itinerary','map','calendar','diary','costs','prep','health','visas','other'];
 function showMainTab(tab){
   MAIN_TABS.forEach(function(t){
     const sec = document.getElementById('tab-'+t);
@@ -1879,6 +1853,8 @@ async function initDashboard(){
   renderCountries();
   renderRail();
   renderCalendar();
+  renderHealth();
+  renderVisas();
   await loadDiary();
   renderDiary();
   renderCosts();
