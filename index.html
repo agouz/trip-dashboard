@@ -1329,7 +1329,9 @@ const ICON_CATEGORY = {"🏨":"Accommodation","✈️":"Flights","🎟️":"Acti
 
 function parseCost(str){
   if(!str) return 0;
-  const n = parseFloat(String(str).replace(/[^0-9.]/g,''));
+  const m = String(str).match(/\$?\s*([\d,]+(?:\.\d+)?)/);
+  if(!m) return 0;
+  const n = parseFloat(m[1].replace(/,/g,''));
   return isNaN(n) ? 0 : n;
 }
 
