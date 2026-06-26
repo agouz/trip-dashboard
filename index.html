@@ -48,6 +48,17 @@
   .side-nav-item.active{background:rgba(227,163,59,0.14); color:var(--amber);}
   .side-nav-item.logout{color:var(--rust);}
   .side-nav-spacer{flex:1;}
+  .sn-divider{height:1px; background:var(--hairline); margin:8px 0;}
+  .sn-expand-item{border-radius:10px; overflow:hidden; margin-bottom:3px;}
+  .sn-expand-head{display:flex; align-items:center; gap:12px; padding:12px 12px; color:var(--parchment-dim); font-weight:600; font-size:15px; cursor:pointer;}
+  .sn-expand-head:active{background:rgba(255,255,255,0.04);}
+  .sn-expand-item.open .sn-expand-head{color:var(--parchment);}
+  .sn-chev{margin-left:auto; font-size:13px; transition:transform 0.2s ease; display:inline-block;}
+  .sn-expand-item.open .sn-chev{transform:rotate(90deg);}
+  .sn-expand-body{display:none; padding:0 10px 10px 44px;}
+  .sn-expand-item.open .sn-expand-body{display:block;}
+  .sn-info-item{font-size:12px; color:var(--parchment-dim); line-height:1.5; margin-bottom:10px;}
+  .sn-info-label{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:2px;}
 
 
   .banner{background:var(--ink-2); border:1px solid var(--hairline); border-left:3px solid var(--rust); border-radius:var(--radius); padding:13px 14px; margin-bottom:18px; cursor:pointer;}
@@ -344,7 +355,27 @@
     <div class="side-nav-item" data-tab="diary" onclick="navigateTo('diary')"><span class="sn-ic">📖</span> Diary</div>
     <div class="side-nav-item" data-tab="costs" onclick="navigateTo('costs')"><span class="sn-ic">💰</span> Costs</div>
     <div class="side-nav-item" data-tab="prep" onclick="navigateTo('prep')"><span class="sn-ic">🎒</span> Prep</div>
-    <div class="side-nav-item" data-tab="other" onclick="navigateTo('other')"><span class="sn-ic">📋</span> Other</div>
+
+    <div class="sn-divider"></div>
+
+    <div class="sn-expand-item" id="snHealth" onclick="toggleSideSection('snHealth')">
+      <div class="sn-expand-head"><span class="sn-ic">💉</span> Health <span class="sn-chev">›</span></div>
+      <div class="sn-expand-body">
+        <div class="sn-info-item"><div class="sn-info-label">Hep A vaccination</div>Received 9 Jun 2026.</div>
+        <div class="sn-info-item"><div class="sn-info-label">Yellow fever</div>Received 9 Jun 2026. Carry certificate while travelling.</div>
+        <div class="sn-info-item"><div class="sn-info-label">Malaria meds</div>Start 1 day before Amazon (17 Sep), continue 7 days after (29 Sep). Carry-on only, original packaging.</div>
+        <div class="sn-info-item"><div class="sn-info-label">Altitude meds</div>Half tablet morning, half tablet night. Cusco → Sacred Valley → Machu Picchu → La Paz → Uyuni.</div>
+      </div>
+    </div>
+
+    <div class="sn-expand-item" id="snVisas" onclick="toggleSideSection('snVisas')">
+      <div class="sn-expand-head"><span class="sn-ic">🛂</span> Visas <span class="sn-chev">›</span></div>
+      <div class="sn-expand-body">
+        <div class="sn-info-item"><div class="sn-info-label">US ESTA</div>Approved. Keep answer simple at border: tourism, NYC → LA/Yosemite/Vegas → Mexico 1 Aug.</div>
+        <div class="sn-info-item"><div class="sn-info-label">Brazil eVisa</div>Approved for Australian passport.</div>
+        <div class="sn-info-item"><div class="sn-info-label">Offline docs</div>Passport, ESTA, flights, hotels, car rental, insurance, Machu Picchu ticket, PeruRail tickets.</div>
+      </div>
+    </div>
     <div class="side-nav-spacer"></div>
     <div class="side-nav-item logout" onclick="doLogout()"><span class="sn-ic">🚪</span> Log out</div>
   </nav>
@@ -1742,7 +1773,7 @@ async function addCostEntry(cat, amount, country, note){
 }
 
 /* ============ MAIN TABS + COUNTDOWN ============ */
-const MAIN_TABS = ['itinerary','map','calendar','diary','costs','prep','other'];
+const MAIN_TABS = ['itinerary','map','calendar','diary','costs','prep'];
 function showMainTab(tab){
   MAIN_TABS.forEach(function(t){
     const sec = document.getElementById('tab-'+t);
@@ -1759,6 +1790,10 @@ function openSideNav(){
 function closeSideNav(){
   document.getElementById('sideNav').classList.remove('open');
   document.getElementById('sideNavOverlay').classList.remove('open');
+}
+function toggleSideSection(id){
+  event.stopPropagation();
+  document.getElementById(id).classList.toggle('open');
 }
 function navigateTo(tab){
   showMainTab(tab);
