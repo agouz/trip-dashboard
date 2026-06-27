@@ -29,14 +29,21 @@
   html{background-color:#16222C; background-color:var(--ink);}
   html,body{margin:0; padding:0; background:var(--ink); color:var(--parchment); font-family:'Space Grotesk',sans-serif; min-height:100vh;}
   .mono{font-family:'IBM Plex Mono',monospace; letter-spacing:0.02em;}
-  #app{max-width:520px; margin:0 auto; padding:18px 14px 60px; min-height:100vh; background:var(--ink);}
+  #app{max-width:520px; margin:0 auto; padding:18px 14px calc(80px + env(safe-area-inset-bottom)); min-height:100vh; background:var(--ink);}
 
   header.top{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--hairline);}
   header.top .tag{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--amber); border:1px solid var(--amber); padding:3px 7px; border-radius:20px; white-space:nowrap;}
   .trip-name{font-size:20px; font-weight:700; letter-spacing:0.01em; color:var(--amber);}
   .hamburger-btn{width:40px; height:40px; border-radius:9px; background:var(--ink-2); border:1px solid var(--hairline); color:var(--parchment); font-size:18px; display:flex; align-items:center; justify-content:center; cursor:pointer;}
 
-  .side-nav-overlay{position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:190; opacity:0; pointer-events:none; transition:opacity 0.22s ease;}
+  .bottom-tab-bar{position:fixed; bottom:0; left:0; right:0; background:var(--ink-2); border-top:1px solid var(--hairline); display:flex; align-items:stretch; justify-content:space-around; z-index:100; padding-bottom:env(safe-area-inset-bottom); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);}
+  .btab{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:10px 0 8px; cursor:pointer; color:var(--parchment-dim); transition:color 0.15s ease; -webkit-tap-highlight-color:transparent; min-width:0;}
+  .btab.active{color:var(--amber);}
+  .btab-icon{font-size:21px; line-height:1;}
+  .btab-label{font-size:10px; font-weight:600; letter-spacing:0.02em; white-space:nowrap;}
+  .btab-pip{width:4px; height:4px; border-radius:50%; background:transparent; margin-top:1px;}
+  .btab.active .btab-pip{background:var(--amber);}
+ opacity:0; pointer-events:none; transition:opacity 0.22s ease;}
   .side-nav-overlay.open{opacity:1; pointer-events:auto;}
   .side-nav{position:fixed; top:0; left:0; bottom:0; width:78%; max-width:300px; background:var(--ink-2); border-right:1px solid var(--hairline); z-index:200; transform:translateX(-105%); transition:transform 0.25s ease; padding:18px 14px; display:flex; flex-direction:column; box-shadow:8px 0 28px rgba(0,0,0,0.4);}
   .side-nav.open{transform:translateX(0);}
@@ -343,7 +350,7 @@
 
 <div id="app" style="display:none;">
   <header class="top">
-    <button class="hamburger-btn" onclick="openSideNav()" aria-label="Menu">☰</button>
+    <div style="width:40px;"></div>
     <div class="trip-name">🦇 Dark Knight Travels</div>
     <button class="hamburger-btn" onclick="window.location.reload(true)" aria-label="Refresh" style="font-size:16px;">↻</button>
   </header>
@@ -351,19 +358,43 @@
   <div id="sideNavOverlay" class="side-nav-overlay" onclick="closeSideNav()"></div>
   <nav id="sideNav" class="side-nav">
     <div class="side-nav-head">
-      <div class="side-nav-brand">🦇 <span>Gotham Itinerary</span></div>
-      <button class="side-nav-close" onclick="closeSideNav()">×</button>
+      <div style="font-weight:700; font-size:15px;">🦇 Dark Knight Travels</div>
+      <button onclick="closeSideNav()" style="background:none; border:none; color:var(--parchment-dim); font-size:22px; cursor:pointer;">×</button>
     </div>
-    <div class="side-nav-item active" data-tab="itinerary" onclick="navigateTo('itinerary')"><span class="sn-ic">🗺️</span> Trip</div>
-    <div class="side-nav-item" data-tab="map" onclick="navigateTo('map')"><span class="sn-ic">🌎</span> Map</div>
     <div class="side-nav-item" data-tab="calendar" onclick="navigateTo('calendar')"><span class="sn-ic">📅</span> Calendar</div>
-    <div class="side-nav-item" data-tab="diary" onclick="navigateTo('diary')"><span class="sn-ic">📖</span> Diary</div>
-    <div class="side-nav-item" data-tab="costs" onclick="navigateTo('costs')"><span class="sn-ic">💰</span> Costs</div>
     <div class="side-nav-item" data-tab="prep" onclick="navigateTo('prep')"><span class="sn-ic">🎒</span> Prep</div>
     <div class="side-nav-item" data-tab="health" onclick="navigateTo('health')"><span class="sn-ic">💉</span> Health</div>
     <div class="side-nav-item" data-tab="visas" onclick="navigateTo('visas')"><span class="sn-ic">🛂</span> Visas</div>
     <div class="side-nav-spacer"></div>
     <div class="side-nav-item logout" onclick="doLogout()"><span class="sn-ic">🚪</span> Log out</div>
+  </nav>
+
+  <nav class="bottom-tab-bar" id="bottomTabBar">
+    <div class="btab active" data-tab="itinerary" onclick="navigateTo('itinerary')">
+      <div class="btab-icon">🗺️</div>
+      <div class="btab-label">Trip</div>
+      <div class="btab-pip"></div>
+    </div>
+    <div class="btab" data-tab="map" onclick="navigateTo('map')">
+      <div class="btab-icon">🌎</div>
+      <div class="btab-label">Map</div>
+      <div class="btab-pip"></div>
+    </div>
+    <div class="btab" data-tab="diary" onclick="navigateTo('diary')">
+      <div class="btab-icon">📖</div>
+      <div class="btab-label">Diary</div>
+      <div class="btab-pip"></div>
+    </div>
+    <div class="btab" data-tab="costs" onclick="navigateTo('costs')">
+      <div class="btab-icon">💰</div>
+      <div class="btab-label">Costs</div>
+      <div class="btab-pip"></div>
+    </div>
+    <div class="btab" onclick="openSideNav()">
+      <div class="btab-icon">☰</div>
+      <div class="btab-label">More</div>
+      <div class="btab-pip"></div>
+    </div>
   </nav>
 
   <div id="saveStatusBar" style="background:var(--ink-2); border:1px solid var(--hairline); border-radius:10px; padding:9px 12px; margin-bottom:14px; font-family:'IBM Plex Mono',monospace; font-size:12px; display:none; justify-content:space-between; align-items:center;">
@@ -1832,8 +1863,13 @@ function showMainTab(tab){
     const sec = document.getElementById('tab-'+t);
     if(sec) sec.style.display = (t===tab) ? 'block' : 'none';
   });
+  // Sync side nav items
   document.querySelectorAll('.side-nav-item[data-tab]').forEach(function(item){
     item.classList.toggle('active', item.getAttribute('data-tab')===tab);
+  });
+  // Sync bottom tab bar
+  document.querySelectorAll('.btab[data-tab]').forEach(function(btn){
+    btn.classList.toggle('active', btn.getAttribute('data-tab')===tab);
   });
 }
 function openSideNav(){
