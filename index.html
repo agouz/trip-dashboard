@@ -513,6 +513,7 @@
 </div>
 
 <button class="cost-fab" id="costFab" onclick="openAddModal('cost')" style="display:none;">+</button>
+<button class="cost-fab" id="prepFab" onclick="openAddModal()" style="display:none;">+</button>
 
 <div id="addModalOverlay">
   <div id="addModal">
@@ -1769,8 +1770,7 @@ function renderPrep(){
   }).join('');
 
   el.innerHTML =
-    '<button class="prep-fab" onclick="openAddModal()">+</button>'
-    + '<div class="misc open" id="misc-prep-tasks">'
+    '<div class="misc open" id="misc-prep-tasks">'
       + '<div class="misc-head" onclick="toggleMisc2(\'misc-prep-tasks\')"><div class="misc-icon">✅</div><div class="misc-name">Before you go</div><div class="chev">›</div></div>'
       + '<div class="misc-body">'
         + '<div class="prep-progress">'+doneTasks+' / '+PREP_TASKS.length+' done</div>'
@@ -1888,6 +1888,8 @@ function showMainTab(tab){
   // Show cost FAB only on costs tab
   const fab = document.getElementById('costFab');
   if(fab) fab.style.display = (tab === 'costs') ? 'flex' : 'none';
+  const prepFab = document.getElementById('prepFab');
+  if(prepFab) prepFab.style.display = (tab === 'prep') ? 'flex' : 'none';
 }
 function openSideNav(){
   document.getElementById('sideNav').classList.add('open');
