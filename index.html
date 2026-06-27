@@ -1017,8 +1017,8 @@ function renderTodayCard(){
 
   el.innerHTML =
     '<div class="today-simple">'
-    + '<div class="today-simple-label mono">'+(isPreTrip ? 'Departing in' : 'Today')+'</div>'
     + countdownHtml
+    + '<div class="rail-wrap" style="margin:14px 0 0;" id="railWrap2"><div class="rail" id="rail2"></div></div>'
     + (contextLine ? '<div class="today-simple-context">'+contextLine+'</div>' : '')
     + '</div>'
     + '<div class="rail-wrap" id="railWrap"><div class="rail" id="rail"></div><div class="rail-caption" id="railCaption"></div></div>';
@@ -1242,11 +1242,15 @@ function renderRail(){
   const overallStart = spans[0].start;
   const overallEnd = spans[spans.length-1].end;
 
-  rail.innerHTML = spans.map(function(s, i){
+  const segHtml = spans.map(function(s, i){
     const meta = COUNTRY_META[s.country] || {accent:"#B9B2A0"};
     const pct = (s.days/totalDays*100).toFixed(2);
     return '<div class="rail-seg" style="width:'+pct+'%; background:'+meta.accent+';" onclick="jumpToCountry('+i+')"></div>';
   }).join('');
+
+  rail.innerHTML = segHtml;
+  const rail2 = document.getElementById('rail2');
+  if(rail2) rail2.innerHTML = segHtml;
 
   const today = new Date(); today.setHours(0,0,0,0);
   if(overallStart && overallEnd && today >= overallStart && today <= overallEnd){
