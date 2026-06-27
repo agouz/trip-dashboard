@@ -875,11 +875,13 @@ function openDiaryModal(){
   document.getElementById('diaryPhotoPreviews').innerHTML = '';
   updateDiaryLocPreview(today);
   document.getElementById('diaryModalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
 }
 function closeDiaryModal(){
   pendingDiaryPhotos.forEach(function(p){ if(p) URL.revokeObjectURL(p.objectUrl); });
   pendingDiaryPhotos = [];
   document.getElementById('diaryModalOverlay').classList.remove('open');
+  document.body.style.overflow='';
 }
 function selectMood(btn, mood){
   selectedMood = (selectedMood === mood) ? '' : mood;
@@ -1472,9 +1474,18 @@ function openSheet(id){
   renderBookings(d);
   switchTab('details');
   document.getElementById('overlay').style.display='flex';
+  document.body.style.overflow='hidden';
 }
-document.getElementById('closeSheet').onclick = function(){ document.getElementById('overlay').style.display='none'; };
-document.getElementById('overlay').onclick = function(e){ if(e.target.id==='overlay') e.currentTarget.style.display='none'; };
+document.getElementById('closeSheet').onclick = function(){
+  document.getElementById('overlay').style.display='none';
+  document.body.style.overflow='';
+};
+document.getElementById('overlay').onclick = function(e){
+  if(e.target.id==='overlay'){
+    e.currentTarget.style.display='none';
+    document.body.style.overflow='';
+  }
+};
 
 /* ============ COSTS ============ */
 const ICON_CATEGORY = {"🏨":"Accommodation","✈️":"Flights","🎟️":"Activities & Tours","🚆":"Transport","🚌":"Transport","🚐":"Transport","🚗":"Transport","📄":"Documents & Health","💊":"Documents & Health"};
