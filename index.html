@@ -317,6 +317,8 @@
   .add-row button{background:var(--amber); color:var(--ink); border:none; border-radius:8px; padding:9px 14px; font-weight:700; font-size:15px; cursor:pointer; flex-shrink:0;}
 
   /* PREP ADD FAB + MODAL */
+  .cost-fab{position:fixed; bottom:calc(80px + env(safe-area-inset-bottom) + 16px); right:18px; width:52px; height:52px; border-radius:16px; background:var(--amber); color:var(--ink); font-size:28px; font-weight:600; border:none; cursor:pointer; z-index:90; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(227,163,59,0.4); line-height:1;}
+  .cost-fab:active{transform:scale(0.94);}
   .prep-fab{display:flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:10px; background:rgba(107,142,99,0.22); color:var(--moss); font-size:23px; font-weight:600; border:1px solid rgba(107,142,99,0.45); cursor:pointer; margin:0 auto 18px;}
   .prep-fab:active{background:rgba(107,142,99,0.32);}
   #addModalOverlay{position:fixed; inset:0; background:rgba(10,15,19,0.6); display:none; align-items:flex-end; z-index:60;}
@@ -509,6 +511,8 @@
   <img id="diaryLightboxImg" src="" alt="">
   <button class="diary-photo-lightbox-close" onclick="closeLightbox()">×</button>
 </div>
+
+<button class="cost-fab" id="costFab" onclick="openAddModal('cost')" style="display:none;">+</button>
 
 <div id="addModalOverlay">
   <div id="addModal">
@@ -1497,8 +1501,7 @@ function renderCosts(){
   }).join('');
 
   el.innerHTML =
-    '<button class="prep-fab" onclick="openAddModal(\'cost\')">+</button>'
-    + '<div class="cost-hero"><div class="amt">'+fmtAud(sum.total)+'</div><div class="lbl">total tracked so far</div></div>'
+    '<div class="cost-hero"><div class="amt">'+fmtAud(sum.total)+'</div><div class="lbl">total tracked so far</div></div>'
     + '<div class="cost-split">'
       + '<div class="cs-box"><div class="cs-amt" style="color:var(--moss)">'+fmtAud(sum.paid)+'</div><div class="cs-lbl">paid</div></div>'
       + '<div class="cs-box"><div class="cs-amt" style="color:var(--slate)">'+fmtAud(sum.confirmed)+'</div><div class="cs-lbl">confirmed,<br>unpaid</div></div>'
@@ -1882,6 +1885,9 @@ function showMainTab(tab){
   document.querySelectorAll('.btab[data-tab]').forEach(function(btn){
     btn.classList.toggle('active', btn.getAttribute('data-tab')===tab);
   });
+  // Show cost FAB only on costs tab
+  const fab = document.getElementById('costFab');
+  if(fab) fab.style.display = (tab === 'costs') ? 'flex' : 'none';
 }
 function openSideNav(){
   document.getElementById('sideNav').classList.add('open');
