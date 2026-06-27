@@ -704,14 +704,6 @@ function computeCritical(){
   return open[0] || null;
 }
 
-function renderBanner(){
-  const c = computeCritical();
-  if(!c){ document.getElementById('bannerTitle').textContent = "Nothing urgent — everything actionable is booked."; document.getElementById('bannerMeta').textContent=''; return; }
-  document.getElementById('bannerTitle').textContent = c.loc + " — " + c.dates;
-  document.getElementById('bannerMeta').textContent = c.booking;
-  document.getElementById('banner').onclick = function(){ openSheet(c.id); };
-}
-
 function legDays(d){
   if(!d.start_date || !d.end_date) return '';
   const diff = Math.round((new Date(d.end_date+'T00:00:00') - new Date(d.start_date+'T00:00:00')) / 86400000);
