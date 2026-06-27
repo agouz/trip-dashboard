@@ -185,6 +185,31 @@
   .map-pin-label{font-family:'Space Grotesk',sans-serif; font-weight:700; fill:var(--parchment); paint-order:stroke; stroke:#0c1318; stroke-width:2px; stroke-linejoin:round; pointer-events:none;}
   .map-seq-label{font-family:'IBM Plex Mono',monospace; fill:var(--parchment-dim); pointer-events:none;}
 
+  /* ---- Today Card ---- */
+  .section-label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--parchment-dim); margin:22px 0 12px;}
+  .today-card{border-radius:16px; overflow:hidden; margin-bottom:10px;}
+  .today-hero{padding:20px 18px 16px;}
+  .today-eyebrow{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.12em; opacity:0.75; margin-bottom:6px;}
+  .today-headline{font-size:24px; font-weight:700; line-height:1.15; margin-bottom:4px;}
+  .today-sub{font-size:13px; opacity:0.75; margin-bottom:16px; line-height:1.4;}
+  .today-stat-row{display:flex; gap:10px;}
+  .today-stat{background:rgba(0,0,0,0.25); border-radius:10px; padding:10px 12px; flex:1;}
+  .today-stat-label{font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.7; margin-bottom:4px;}
+  .today-stat-val{font-size:14px; font-weight:700; line-height:1.2;}
+  .today-section{padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08);}
+  .today-section-label{font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.1em; opacity:0.6; margin-bottom:8px;}
+  .today-plan-text{font-size:13px; line-height:1.65; opacity:0.9;}
+  .today-action{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
+  .today-action-text{font-size:13px; font-weight:600; line-height:1.4; flex:1;}
+  .today-action-chip{font-family:'IBM Plex Mono',monospace; font-size:9px; padding:3px 8px; border-radius:20px; background:rgba(0,0,0,0.3); white-space:nowrap; opacity:0.8; flex-shrink:0;}
+  .today-upcoming{display:flex; flex-direction:column; gap:8px;}
+  .today-upcoming-item{display:flex; align-items:center; gap:10px; font-size:12px; cursor:pointer;}
+  .today-upcoming-date{font-family:'IBM Plex Mono',monospace; font-size:10px; opacity:0.6; width:52px; flex-shrink:0;}
+  .today-upcoming-dot{width:7px; height:7px; border-radius:50%; flex-shrink:0;}
+  .today-upcoming-text{opacity:0.85; line-height:1.3;}
+  .today-countdown-wrap{padding:16px 18px 14px; border-top:1px solid rgba(255,255,255,0.08);}
+  .today-cd-label{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.65; margin-bottom:10px;}
+
   /* ---- Diary ---- */
   .diary-header{margin-bottom:20px;}
   .diary-title-row{display:flex; align-items:flex-start; justify-content:space-between; gap:12px;}
@@ -402,53 +427,12 @@
     <button id="retrySaveBtn" style="display:none; background:var(--amber); color:var(--ink); border:none; border-radius:6px; padding:4px 9px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px; cursor:pointer;">Retry</button>
   </div>
 
-  <div class="countdown" id="countdown">
-    <div class="cd-unit">
-      <div class="cd-tiles">
-        <div class="cd-tile" id="cdD0"><span>-</span></div>
-        <div class="cd-tile" id="cdD1"><span>-</span></div>
-      </div>
-      <div class="cd-label">Days</div>
-    </div>
-    <div class="cd-colon">:</div>
-    <div class="cd-unit">
-      <div class="cd-tiles">
-        <div class="cd-tile" id="cdH0"><span>-</span></div>
-        <div class="cd-tile" id="cdH1"><span>-</span></div>
-      </div>
-      <div class="cd-label">Hours</div>
-    </div>
-    <div class="cd-colon">:</div>
-    <div class="cd-unit">
-      <div class="cd-tiles">
-        <div class="cd-tile" id="cdM0"><span>-</span></div>
-        <div class="cd-tile" id="cdM1"><span>-</span></div>
-      </div>
-      <div class="cd-label">Mins</div>
-    </div>
-    <div class="cd-colon">:</div>
-    <div class="cd-unit">
-      <div class="cd-tiles">
-        <div class="cd-tile" id="cdS0"><span>-</span></div>
-        <div class="cd-tile" id="cdS1"><span>-</span></div>
-      </div>
-      <div class="cd-label">Secs</div>
-    </div>
-  </div>
 
-  <div class="rail-wrap" id="railWrap">
-    <div class="rail" id="rail"></div>
-    <div class="rail-caption" id="railCaption"></div>
-  </div>
 
 
   <div id="tab-itinerary">
-    <div class="banner" id="banner">
-      <div class="eyebrow">Next critical action</div>
-      <div class="title" id="bannerTitle">Loading…</div>
-      <div class="meta" id="bannerMeta"></div>
-    </div>
-
+    <div id="todayCard"></div>
+    <div class="section-label" id="itineraryLabel" style="display:none;">Full Itinerary</div>
     <div id="countries"></div>
   </div>
 
@@ -1014,6 +998,122 @@ function renderDiary(){
   }).join('');
 }
 
+function renderTodayCard(){
+  const el = document.getElementById('todayCard');
+  const todayStr = new Date().toISOString().slice(0,10);
+  const currentLeg = DATA.find(function(d){ return d.start_date && d.end_date && todayStr>=d.start_date && todayStr<=d.end_date; });
+  const nextCritical = computeCritical();
+  const meta = currentLeg ? (COUNTRY_META[currentLeg.country]||{accent:'#B9B2A0'}) : null;
+  const accent = meta ? meta.accent : '#E3A33B';
+  const isPreTrip = todayStr < '2026-07-14';
+  const isPostTrip = todayStr > '2026-10-16';
+
+  // Build upcoming next 5 legs
+  const upcoming = DATA.filter(function(d){ return d.start_date && d.start_date > todayStr; }).slice(0,4);
+
+  // Countdown HTML (always shown in today card)
+  const countdownHtml = '<div class="today-countdown-wrap">'
+    + '<div class="today-cd-label">'+(isPreTrip ? 'Departing in' : 'Trip ends in')+'</div>'
+    + '<div class="countdown" id="countdown">'
+    + '<div class="cd-unit"><div class="cd-tiles"><div class="cd-tile" id="cdD0"><span>-</span></div><div class="cd-tile" id="cdD1"><span>-</span></div></div><div class="cd-label">Days</div></div>'
+    + '<div class="cd-colon">:</div>'
+    + '<div class="cd-unit"><div class="cd-tiles"><div class="cd-tile" id="cdH0"><span>-</span></div><div class="cd-tile" id="cdH1"><span>-</span></div></div><div class="cd-label">Hours</div></div>'
+    + '<div class="cd-colon">:</div>'
+    + '<div class="cd-unit"><div class="cd-tiles"><div class="cd-tile" id="cdM0"><span>-</span></div><div class="cd-tile" id="cdM1"><span>-</span></div></div><div class="cd-label">Mins</div></div>'
+    + '<div class="cd-colon">:</div>'
+    + '<div class="cd-unit"><div class="cd-tiles"><div class="cd-tile" id="cdS0"><span>-</span></div><div class="cd-tile" id="cdS1"><span>-</span></div></div><div class="cd-label">Secs</div></div>'
+    + '</div></div>';
+
+  let html = '<div class="today-card" style="background:linear-gradient(135deg,'+accent+'33 0%,'+accent+'11 100%); border:1px solid '+accent+'44;">';
+
+  if(isPreTrip){
+    const daysTo = Math.ceil((new Date('2026-07-14') - new Date()) / 86400000);
+    // Get packing and prep counts
+    html += '<div class="today-hero" style="color:var(--parchment);">'
+      + '<div class="today-eyebrow">Pre-departure · Sydney</div>'
+      + '<div class="today-headline">Dark Knight Travels</div>'
+      + '<div class="today-sub">14 Jul 2026 · QF3 SYD → JFK · '+ daysTo + ' days to go</div>'
+      + '<div class="today-stat-row">'
+      + '<div class="today-stat"><div class="today-stat-label">First stop</div><div class="today-stat-val">🗽 New York City</div></div>'
+      + '<div class="today-stat"><div class="today-stat-label">Countries</div><div class="today-stat-val">7 planned</div></div>'
+      + '<div class="today-stat"><div class="today-stat-label">Duration</div><div class="today-stat-val">~95 days</div></div>'
+      + '</div></div>';
+    // Next action
+    if(nextCritical){
+      html += '<div class="today-section">'
+        + '<div class="today-section-label">⚡ Next critical action</div>'
+        + '<div class="today-action"><div class="today-action-text">'+nextCritical.loc+' — '+nextCritical.dates+'</div>'
+        + '<div class="today-action-chip">'+nextCritical.priority+'</div></div>'
+        + (nextCritical.booking ? '<div style="font-size:12px; opacity:0.65; margin-top:5px;">'+nextCritical.booking+'</div>' : '')
+        + '</div>';
+    }
+    // Upcoming legs
+    if(upcoming.length){
+      html += '<div class="today-section"><div class="today-section-label">Coming up</div><div class="today-upcoming">'
+        + upcoming.map(function(d){
+            const m = COUNTRY_META[d.country]||{accent:'#B9B2A0'};
+            const dt = d.start_date ? new Date(d.start_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : d.dates;
+            return '<div class="today-upcoming-item" onclick="openSheet('+d.id+')">'
+              + '<div class="today-upcoming-date">'+dt+'</div>'
+              + '<div class="today-upcoming-dot" style="background:'+m.accent+'"></div>'
+              + '<div class="today-upcoming-text">'+d.loc+'</div>'
+              + '</div>';
+          }).join('')
+        + '</div></div>';
+    }
+  } else if(currentLeg){
+    const legStart = new Date(currentLeg.start_date+'T00:00:00');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dayNum = Math.floor((today - legStart)/86400000)+1;
+    const totalDays = Math.round((new Date(currentLeg.end_date+'T00:00:00') - legStart)/86400000)+1;
+    const todayPlan = currentLeg.plan ? currentLeg.plan.split('\n').find(function(l){ return l.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*'+today.toLocaleDateString('en-AU',{day:'numeric',month:'short'})+'/); }) || '' : '';
+    html += '<div class="today-hero" style="color:var(--parchment);">'
+      + '<div class="today-eyebrow">'+today.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'})+'</div>'
+      + '<div class="today-headline">'+currentLeg.loc+'</div>'
+      + '<div class="today-sub">Day '+dayNum+' of '+totalDays+' · '+currentLeg.country+'</div>'
+      + '<div class="today-stat-row">'
+      + (upcoming[0] ? '<div class="today-stat"><div class="today-stat-label">Next stop</div><div class="today-stat-val">'+upcoming[0].loc+'</div></div>' : '')
+      + '<div class="today-stat"><div class="today-stat-label">Bookings</div><div class="today-stat-val">'+(currentLeg.bookings ? currentLeg.bookings.length : 0)+' confirmed</div></div>'
+      + '</div></div>';
+    // Today's plan snippet
+    if(currentLeg.plan){
+      const lines = currentLeg.plan.split('\n').filter(Boolean);
+      const preview = lines.slice(0,3).join(' · ').slice(0,180);
+      html += '<div class="today-section"><div class="today-section-label">📋 Today\'s plan</div>'
+        + '<div class="today-plan-text">'+preview+'…</div></div>';
+    }
+    if(nextCritical){
+      html += '<div class="today-section"><div class="today-section-label">⚡ Next action needed</div>'
+        + '<div class="today-action"><div class="today-action-text">'+nextCritical.loc+'</div>'
+        + '<div class="today-action-chip">'+nextCritical.priority+'</div></div></div>';
+    }
+  } else {
+    html += '<div class="today-hero" style="color:var(--parchment);">'
+      + '<div class="today-eyebrow">Dark Knight Travels</div>'
+      + '<div class="today-headline">In transit</div>'
+      + '<div class="today-sub">Travel day — check your flight details</div></div>';
+  }
+
+  html += countdownHtml + '</div>';
+
+  // Rail
+  html += '<div class="rail-wrap" id="railWrap"><div class="rail" id="rail"></div><div class="rail-caption" id="railCaption"></div></div>';
+
+  el.innerHTML = html;
+  document.getElementById('itineraryLabel').style.display = 'block';
+
+  // Restart countdown ticker now that the DOM elements exist
+  clearInterval(window._cdTimer);
+  tickCountdown();
+  window._cdTimer = setInterval(tickCountdown, 1000);
+
+  renderRail();
+}
+
+function renderBanner(){ renderTodayCard(); } // alias — renderBanner is still called in initDashboard
+
+function toggleCountry(i){
+  document.getElementById('country-'+i).classList.toggle('open');
 function toggleCountry(i){
   document.getElementById('country-'+i).classList.toggle('open');
 }
@@ -1957,8 +2057,7 @@ async function initDashboard(){
   renderCosts();
   renderPrep();
   renderOther();
-  tickCountdown();
-  setInterval(tickCountdown, 1000);
+  tickCountdown(); // initial tick — renderTodayCard restarts the interval after injecting tiles
 }
 
 const AUTHORIZED_GITHUB_USERNAME = 'agouz';
