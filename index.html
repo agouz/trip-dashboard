@@ -176,14 +176,14 @@
   .empty-note{font-size:14px; color:var(--parchment-dim); text-align:center; margin-top:28px; line-height:1.7;}
 
   /* COUNTDOWN */
-  .countdown{display:flex; align-items:flex-end; justify-content:center; gap:6px; margin-bottom:16px;}
+  .countdown{display:flex; align-items:flex-end; justify-content:center; gap:1.2vw; margin-bottom:16px; width:100%;}
   .cd-unit{display:flex; flex-direction:column; align-items:center; gap:5px;}
-  .cd-tiles{display:flex; gap:4px;}
-  .cd-tile{width:44px; height:62px; background:var(--ink-2); border:1px solid var(--hairline); border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; perspective:200px;}
+  .cd-tiles{display:flex; gap:1vw;}
+  .cd-tile{width:9vw; height:13vw; max-width:50px; max-height:70px; background:var(--ink-2); border:1px solid var(--hairline); border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; perspective:200px;}
   .cd-tile::after{content:''; position:absolute; left:0; right:0; top:50%; height:1px; background:rgba(0,0,0,0.4); z-index:2; pointer-events:none;}
-  .cd-tile span{font-family:'IBM Plex Mono',monospace; font-size:32px; font-weight:700; color:var(--amber); line-height:1; display:block; transition:transform 0.22s ease-in; transform-origin:center center; will-change:transform;}
-  .cd-label{font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--parchment-dim); margin-top:4px;}
-  .cd-colon{font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:700; color:var(--parchment-dim); opacity:0.5; padding-bottom:22px; line-height:1;}
+  .cd-tile span{font-family:'IBM Plex Mono',monospace; font-size:6.5vw; font-weight:700; color:var(--amber); line-height:1; display:block; transition:transform 0.22s ease-in; transform-origin:center center; will-change:transform; max-font-size:34px;}
+  .cd-label{font-size:2.2vw; text-transform:uppercase; letter-spacing:0.1em; color:var(--parchment-dim); margin-top:4px; max-font-size:11px;}
+  .cd-colon{font-family:'IBM Plex Mono',monospace; font-size:5.5vw; font-weight:700; color:var(--parchment-dim); opacity:0.5; padding-bottom:5vw; line-height:1;}
 
   /* MAIN TABS */
   .map-toolbar{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px;}
