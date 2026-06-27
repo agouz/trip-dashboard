@@ -33,6 +33,7 @@
 
   header.top{display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--hairline);}
   header.top .tag{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--amber); border:1px solid var(--amber); padding:3px 7px; border-radius:20px; white-space:nowrap;}
+  .auth-gate-title{font-size:22px; font-weight:800; letter-spacing:-0.01em; color:var(--amber); margin:14px 0 0; position:relative; z-index:1;}
   .trip-name{font-size:22px; font-weight:800; letter-spacing:-0.01em; color:var(--amber);}
   .hamburger-btn{width:40px; height:40px; border-radius:9px; background:var(--ink-2); border:1px solid var(--hairline); color:var(--parchment); font-size:18px; display:flex; align-items:center; justify-content:center; cursor:pointer;}
 
@@ -353,16 +354,18 @@
   <svg class="bat-mark" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
     <path fill="#E3A33B" d="M50 14c-2.5-4-6-7-6-7s1 4-1 7c-3-5-9-9-15-10 2 3 4 7 4 10-7-2-15-1-20 3 5 0 11 2 14 5-6 0-13 3-17 8 6-2 13-2 18 0-5 3-9 8-10 13 5-4 11-7 16-7-2 4-2 9 0 13 1-5 4-9 8-11 1 5 4 9 9 11-2-4-2-9 0-13 5 0 11 3 16 7-1-5-5-10-10-13 5-2 12-2 18 0-4-5-11-8-17-8 3-3 9-5 14-5-5-4-13-5-20-3 0-3 2-7 4-10-6 1-12 5-15 10-2-3-1-7-1-7s-3.5 3-6 7z"/>
   </svg>
+  <div class="auth-gate-title">🦇 Dark Knight Travels</div>
   <div id="authGateContent">
     <div class="auth-spinner" id="authSpinner"></div>
   </div>
 </div>
 
+<div id="pullRefreshBar" style="position:fixed;top:0;left:0;right:0;height:3px;background:var(--amber);transform:scaleX(0);transform-origin:left;transition:transform 0.1s;z-index:999;pointer-events:none;"></div>
+
 <div id="app" style="display:none;">
   <header class="top">
     <div style="width:40px;"></div>
-    <div class="trip-name">🦇 Dark Knight Travels</div>
-    <button class="hamburger-btn" onclick="window.location.reload(true)" aria-label="Refresh" style="font-size:16px;">↻</button>
+    <div style="width:40px;"></div>
   </header>
 
   <div id="sideNavOverlay" class="side-nav-overlay" onclick="closeSideNav()"></div>
@@ -1918,13 +1921,40 @@ function navigateTo(tab){
 }
 
 (function(){
-  let sx = 0, sy = 0;
+  let sx = 0, sy = 0, pulling = false;
+  const bar = document.getElementById('pullRefreshBar');
+
   document.addEventListener('touchstart', function(e){
-    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    pulling = window.scrollY === 0;
   }, {passive:true});
+
+  document.addEventListener('touchmove', function(e){
+    if(!pulling || !bar) return;
+    const dy = e.touches[0].clientY - sy;
+    if(dy > 0 && Math.abs(dy) > Math.abs(e.touches[0].clientX - sx)){
+      const progress = Math.min(dy / 90, 1);
+      bar.style.transform = 'scaleX('+progress+')';
+    }
+  }, {passive:true});
+
   document.addEventListener('touchend', function(e){
-    const dx = e.changedTouches[0].clientX - sx;
+    if(!bar) return;
     const dy = e.changedTouches[0].clientY - sy;
+    const dx = e.changedTouches[0].clientX - sx;
+    bar.style.transform = 'scaleX(0)';
+
+    // Pull-to-refresh: pulled down 90px+ from top, more vertical than horizontal
+    if(pulling && dy > 90 && Math.abs(dy) > Math.abs(dx) * 1.5 && window.scrollY === 0){
+      bar.style.transform = 'scaleX(1)';
+      setTimeout(function(){ window.location.reload(true); }, 120);
+      return;
+    }
+
+    pulling = false;
+
+    // Horizontal swipe navigation
     if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
     const idx = SWIPE_TABS.indexOf(currentTab);
     if(dx < 0 && idx < SWIPE_TABS.length-1) navigateTo(SWIPE_TABS[idx+1]);
