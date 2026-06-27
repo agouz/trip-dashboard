@@ -608,28 +608,31 @@
 
 <div id="overlay">
   <div id="sheet">
-    <button class="close" id="closeSheet">✕</button>
-    <div class="handle"></div>
-    <div class="sheet-header">
-      <div class="sheet-header-top">
-        <h2 id="sLoc"></h2>
-        <div id="sStatusPill"></div>
+    <div style="position:sticky; top:0; background:var(--ink-2); z-index:1; border-radius:18px 18px 0 0;">
+      <div class="handle"></div>
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; padding:4px 18px 10px;">
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px;">
+            <h2 id="sLoc" style="margin:0; font-size:23px; font-weight:800; letter-spacing:-0.02em;"></h2>
+            <div id="sStatusPill" style="flex-shrink:0;"></div>
+          </div>
+          <div class="dates mono" id="sDates"></div>
+        </div>
+        <button id="closeSheet" onclick="closeSheet()" style="margin-left:12px; margin-top:2px; background:var(--ink-3); border:1px solid var(--hairline); color:var(--parchment-dim); font-size:18px; width:34px; height:34px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;">✕</button>
       </div>
-      <div class="dates mono" id="sDates"></div>
+      <div class="sheet-tabs" style="display:flex; width:100%; padding:0 18px 14px;">
+        <button class="sheet-tab active" id="tabDetails" onclick="switchTab('details')">Details</button>
+        <button class="sheet-tab" id="tabBookings" onclick="switchTab('bookings')">Bookings</button>
+      </div>
     </div>
 
-    <div class="sheet-tabs" style="display:flex; width:100%;">
-      <button class="sheet-tab active" id="tabDetails" onclick="switchTab('details')">Details</button>
-      <button class="sheet-tab" id="tabBookings" onclick="switchTab('bookings')">Bookings</button>
-    </div>
-
-    <div id="paneDetails">
+    <div id="paneDetails" style="padding:0 18px 24px;">
       <div id="sPlan"></div>
       <div class="row" id="sNotesRow"><div class="label">Notes</div><div class="val" id="sNotes"></div></div>
       <div class="row" id="sBookingRow"><div class="label">Booking needed</div><div class="val" id="sBooking"></div></div>
     </div>
 
-    <div id="paneBookings" style="display:none;"></div>
+    <div id="paneBookings" style="display:none; padding:0 18px 24px;"></div>
   </div>
 </div>
 
@@ -875,13 +878,13 @@ function openDiaryModal(){
   document.getElementById('diaryPhotoPreviews').innerHTML = '';
   updateDiaryLocPreview(today);
   document.getElementById('diaryModalOverlay').classList.add('open');
-  document.body.style.overflow='hidden';
+  lockScroll();
 }
 function closeDiaryModal(){
   pendingDiaryPhotos.forEach(function(p){ if(p) URL.revokeObjectURL(p.objectUrl); });
   pendingDiaryPhotos = [];
   document.getElementById('diaryModalOverlay').classList.remove('open');
-  document.body.style.overflow='';
+  unlockScroll();
 }
 function selectMood(btn, mood){
   selectedMood = (selectedMood === mood) ? '' : mood;
@@ -1450,11 +1453,11 @@ function openDayDetail(idx,legId){
     return '<div class="day-bullet"><div class="day-bullet-icon">'+autoEmoji(line)+'</div><div class="day-bullet-text">'+line+'</div></div>';
   }).join('');
   document.getElementById('dayDetailOverlay').style.display='flex';
-  document.body.style.overflow='hidden';
+  lockScroll();
 }
 function closeDayDetail(){
   document.getElementById('dayDetailOverlay').style.display='none';
-  document.body.style.overflow='';
+  unlockScroll();
 }
 function openSheet(id){
   const d=DATA.find(function(x){ return x.id===id; });
@@ -1474,17 +1477,10 @@ function openSheet(id){
   renderBookings(d);
   switchTab('details');
   document.getElementById('overlay').style.display='flex';
-  document.body.style.overflow='hidden';
+  lockScroll();
 }
-document.getElementById('closeSheet').onclick = function(){
-  document.getElementById('overlay').style.display='none';
-  document.body.style.overflow='';
-};
 document.getElementById('overlay').onclick = function(e){
-  if(e.target.id==='overlay'){
-    e.currentTarget.style.display='none';
-    document.body.style.overflow='';
-  }
+  if(e.target.id==='overlay'){ closeSheet(); }
 };
 
 /* ============ COSTS ============ */
@@ -1973,6 +1969,24 @@ function toggleSideSection(id){
   event.stopPropagation();
   document.getElementById(id).classList.toggle('open');
 }
+let _lockScrollY = 0;
+function lockScroll(){
+  _lockScrollY = window.scrollY;
+  document.body.style.position='fixed';
+  document.body.style.top='-'+_lockScrollY+'px';
+  document.body.style.width='100%';
+}
+function unlockScroll(){
+  document.body.style.position='';
+  document.body.style.top='';
+  document.body.style.width='';
+  window.scrollTo(0,_lockScrollY);
+}
+function closeSheet(){
+  document.getElementById('overlay').style.display='none';
+  unlockScroll();
+}
+
 let lastTabTap = {tab: null, time: 0};
 function tabTap(tab){
   const now = Date.now();
