@@ -157,9 +157,17 @@
   .countdown{display:flex; align-items:flex-end; justify-content:center; gap:6px; margin-bottom:16px;}
   .cd-unit{display:flex; flex-direction:column; align-items:center; gap:5px;}
   .cd-tiles{display:flex; gap:4px;}
-  .cd-tile{width:38px; height:52px; background:var(--ink-2); border:1px solid var(--hairline); border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;}
-  .cd-tile::after{content:''; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--hairline);}
-  .cd-tile span{font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:700; color:var(--amber); line-height:1; position:relative; z-index:1;}
+  .cd-tile{width:38px; height:52px; perspective:120px; position:relative;}
+  .cd-tile .top, .cd-tile .bottom{position:absolute; left:0; right:0; overflow:hidden; background:var(--ink-2); border:1px solid var(--hairline);}
+  .cd-tile .top{top:0; height:50%; border-radius:8px 8px 0 0; border-bottom:1px solid var(--hairline); display:flex; align-items:flex-end; justify-content:center; padding-bottom:1px;}
+  .cd-tile .bottom{bottom:0; height:50%; border-radius:0 0 8px 8px; border-top:none; display:flex; align-items:flex-start; justify-content:center; padding-top:1px;}
+  .cd-tile .flip-top{position:absolute; left:0; right:0; top:0; height:50%; overflow:hidden; border-radius:8px 8px 0 0; background:var(--ink-2); border:1px solid var(--hairline); border-bottom:none; transform-origin:bottom center; display:flex; align-items:flex-end; justify-content:center; padding-bottom:1px; backface-visibility:hidden;}
+  .cd-tile .flip-bottom{position:absolute; left:0; right:0; bottom:0; height:50%; overflow:hidden; border-radius:0 0 8px 8px; background:var(--ink-2); border:1px solid var(--hairline); border-top:1px solid var(--hairline); transform-origin:top center; transform:rotateX(90deg); display:flex; align-items:flex-start; justify-content:center; padding-top:1px; backface-visibility:hidden;}
+  .cd-tile .flip-top.go{animation:flipTop 0.25s ease-in forwards;}
+  .cd-tile .flip-bottom.go{animation:flipBottom 0.25s ease-out 0.22s forwards;}
+  @keyframes flipTop{0%{transform:rotateX(0deg);}100%{transform:rotateX(-90deg);}}
+  @keyframes flipBottom{0%{transform:rotateX(90deg);}100%{transform:rotateX(0deg);}}
+  .cd-tile span{font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:700; color:var(--amber); line-height:1; user-select:none;}
   .cd-label{font-size:9px; text-transform:uppercase; letter-spacing:0.1em; color:var(--parchment-dim);}
   .cd-colon{font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:700; color:var(--parchment-dim); opacity:0.5; padding-bottom:18px; line-height:1;}
 
@@ -374,32 +382,32 @@
   <div class="countdown" id="countdown">
     <div class="cd-unit">
       <div class="cd-tiles">
-        <div class="cd-tile"><span id="cdD0">-</span></div>
-        <div class="cd-tile"><span id="cdD1">-</span></div>
+        <div class="cd-tile" id="cdD0"><div class="top"><span>-</span></div><div class="bottom"><span>-</span></div><div class="flip-top"><span>-</span></div><div class="flip-bottom"><span>-</span></div></div>
+        <div class="cd-tile" id="cdD1"><div class="top"><span>-</span></div><div class="bottom"><span>-</span></div><div class="flip-top"><span>-</span></div><div class="flip-bottom"><span>-</span></div></div>
       </div>
       <div class="cd-label">Days</div>
     </div>
     <div class="cd-colon">:</div>
     <div class="cd-unit">
       <div class="cd-tiles">
-        <div class="cd-tile"><span id="cdH0">-</span></div>
-        <div class="cd-tile"><span id="cdH1">-</span></div>
+        <div class="cd-tile" id="cdH0"><div class="top"><span>-</span></div><div class="bottom"><span>-</span></div><div class="flip-top"><span>-</span></div><div class="flip-bottom"><span>-</span></div></div>
+        <div class="cd-tile" id="cdH1"><div class="top"><span>-</span></div><div class="bottom"><span>-</span></div><div class="flip-top"><span>-</span></div><div class="flip-bottom"><span>-</span></div></div>
       </div>
       <div class="cd-label">Hours</div>
     </div>
     <div class="cd-colon">:</div>
     <div class="cd-unit">
       <div class="cd-tiles">
-        <div class="cd-tile"><span id="cdM0">-</span></div>
-        <div class="cd-tile"><span id="cdM1">-</span></div>
+        <div class="cd-tile" id="cdM0"><div class="top"><span>-</span></div><div class="bottom"><span>-</span></div><div class="flip-top"><span>-</span></div><div class="flip-bottom"><span>-</span></div></div>
+        <div class="cd-tile" id="cdM1"><div class="top"><span>-</span></div><div class="bottom"><span>-</span></div><div class="flip-top"><span>-</span></div><div class="flip-bottom"><span>-</span></div></div>
       </div>
       <div class="cd-label">Mins</div>
     </div>
     <div class="cd-colon">:</div>
     <div class="cd-unit">
       <div class="cd-tiles">
-        <div class="cd-tile"><span id="cdS0">-</span></div>
-        <div class="cd-tile"><span id="cdS1">-</span></div>
+        <div class="cd-tile" id="cdS0"><div class="top"><span>-</span></div><div class="bottom"><span>-</span></div><div class="flip-top"><span>-</span></div><div class="flip-bottom"><span>-</span></div></div>
+        <div class="cd-tile" id="cdS1"><div class="top"><span>-</span></div><div class="bottom"><span>-</span></div><div class="flip-top"><span>-</span></div><div class="flip-bottom"><span>-</span></div></div>
       </div>
       <div class="cd-label">Secs</div>
     </div>
@@ -1859,6 +1867,25 @@ function navigateTo(tab){
 }
 
 const TRIP_START = new Date("2026-07-14T09:10:00+10:00");
+function flipTile(id, newChar){
+  const tile = document.getElementById(id);
+  if(!tile) return;
+  const oldChar = tile.getAttribute('data-val') || '-';
+  if(oldChar === newChar) return;
+  tile.setAttribute('data-val', newChar);
+  const spans = tile.querySelectorAll('span');
+  // spans[0]=top, [1]=bottom, [2]=flip-top, [3]=flip-bottom
+  spans[2].textContent = oldChar; // flip-top shows OLD digit folding away
+  spans[3].textContent = newChar; // flip-bottom shows NEW digit folding in
+  spans[0].textContent = newChar; // static top updated immediately (hidden under flip-top)
+  spans[1].textContent = newChar; // static bottom updated immediately
+  const ft = tile.querySelector('.flip-top');
+  const fb = tile.querySelector('.flip-bottom');
+  ft.classList.remove('go'); fb.classList.remove('go');
+  void ft.offsetWidth; // force reflow to restart animation
+  ft.classList.add('go'); fb.classList.add('go');
+}
+
 function tickCountdown(){
   const now = new Date();
   let diff = TRIP_START - now;
@@ -1867,15 +1894,15 @@ function tickCountdown(){
   const hours = Math.floor((diff % 86400000) / 3600000);
   const mins  = Math.floor((diff % 3600000)  / 60000);
   const secs  = Math.floor((diff % 60000)    / 1000);
-  function setTiles(prefix, val, pad){
-    const s = pad ? String(val).padStart(2,'0') : String(val).padStart(2,'0');
-    document.getElementById(prefix+'0').textContent = s[0];
-    document.getElementById(prefix+'1').textContent = s[1];
+  function setTiles(prefix, val){
+    const s = String(val).padStart(2,'0');
+    flipTile(prefix+'0', s[0]);
+    flipTile(prefix+'1', s[1]);
   }
-  setTiles('cdD', days,  true);
-  setTiles('cdH', hours, true);
-  setTiles('cdM', mins,  true);
-  setTiles('cdS', secs,  true);
+  setTiles('cdD', days);
+  setTiles('cdH', hours);
+  setTiles('cdM', mins);
+  setTiles('cdS', secs);
 }
 
 async function initDashboard(){
