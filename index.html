@@ -383,11 +383,6 @@
   </nav>
 
   <nav class="bottom-tab-bar" id="bottomTabBar">
-    <div class="btab active" data-tab="itinerary" onclick="tabTap('itinerary')">
-      <div class="btab-icon">🗺️</div>
-      <div class="btab-label">Trip</div>
-      <div class="btab-pip"></div>
-    </div>
     <div class="btab" data-tab="map" onclick="tabTap('map')">
       <div class="btab-icon">🌎</div>
       <div class="btab-label">Map</div>
@@ -396,6 +391,11 @@
     <div class="btab" data-tab="diary" onclick="tabTap('diary')">
       <div class="btab-icon">📖</div>
       <div class="btab-label">Diary</div>
+      <div class="btab-pip"></div>
+    </div>
+    <div class="btab active" data-tab="itinerary" onclick="tabTap('itinerary')">
+      <div class="btab-icon">🗺️</div>
+      <div class="btab-label">Trip</div>
       <div class="btab-pip"></div>
     </div>
     <div class="btab" data-tab="costs" onclick="tabTap('costs')">
@@ -1923,7 +1923,7 @@ function tabTap(tab){
   lastTabTap = {tab: tab, time: now};
   navigateTo(tab);
 }
-const SWIPE_TABS = ['itinerary','map','diary','costs'];
+const SWIPE_TABS = ['map','diary','itinerary','costs'];
 
 function navigateTo(tab){
   currentTab = tab;
