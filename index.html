@@ -748,7 +748,6 @@ function renderCountries(){
         + '<div class="leg-card" style="--barcolor:'+meta.accent+'">'
         + '<div class="leg-top"><div><div class="leg-loc">'+l.loc+'</div>'
         + '<div class="leg-dates">'+l.dates+(legDays(l) ? ' · '+legDays(l) : '')+'</div></div>'+statusPill(l.status)+'</div>'
-        + (preview ? '<div class="leg-plan-preview">'+preview+'</div>' : '')
         + (bkCount ? '<div class="leg-bk-row"><div class="leg-bk-dot"></div><div class="leg-bk-label">'+bkCount+' booking'+(bkCount>1?'s':'')+' confirmed</div></div>' : '')
         + '</div></div>';
     }).join('');
