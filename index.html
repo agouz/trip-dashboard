@@ -118,7 +118,19 @@
   .pill.open{background:rgba(193,87,61,0.18); color:var(--rust); border:1px solid rgba(193,87,61,0.4);}
 
 
-  .sheet-tabs{display:flex; gap:6px; margin-bottom:14px;}
+  .sheet-header{margin-bottom:16px;}
+  .sheet-header-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:4px;}
+  .sheet-header-top h2{margin:0; font-size:23px; font-weight:800; letter-spacing:-0.02em; flex:1;}
+  .day-list{display:flex; flex-direction:column; gap:2px; margin-bottom:16px;}
+  .day-list-item{display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:10px; cursor:pointer; transition:background 0.12s;}
+  .day-list-item:active{background:var(--ink-3);}
+  .day-list-date{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--parchment-dim); width:52px; flex-shrink:0; line-height:1.3;}
+  .day-list-headline{font-size:15px; font-weight:600; flex:1; line-height:1.3; color:var(--parchment);}
+  .day-list-chev{font-size:13px; color:var(--parchment-dim); opacity:0.4;}
+  .day-bullet{display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--hairline);}
+  .day-bullet:last-child{border-bottom:none;}
+  .day-bullet-icon{font-size:18px; flex-shrink:0; width:24px; text-align:center; margin-top:1px;}
+  .day-bullet-text{font-size:16px; line-height:1.5; color:var(--parchment); flex:1;}
   .sheet-tab{flex:1; background:var(--ink-3); border:1px solid var(--hairline); color:var(--parchment-dim); font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; padding:8px 0; border-radius:8px; cursor:pointer; text-align:center;}
   .sheet-tab.active{background:rgba(227,163,59,0.14); border-color:var(--amber); color:var(--amber);}
   .bk-item{background:var(--ink-3); border:1px solid var(--hairline); border-radius:10px; padding:11px 12px; margin-bottom:9px;}
@@ -597,8 +609,13 @@
   <div id="sheet">
     <button class="close" id="closeSheet">✕</button>
     <div class="handle"></div>
-    <h2 id="sLoc"></h2>
-    <div class="dates mono" id="sDates"></div>
+    <div class="sheet-header">
+      <div class="sheet-header-top">
+        <h2 id="sLoc"></h2>
+        <div id="sStatusPill"></div>
+      </div>
+      <div class="dates mono" id="sDates"></div>
+    </div>
 
     <div class="sheet-tabs">
       <button class="sheet-tab active" id="tabDetails" onclick="switchTab('details')">Details</button>
@@ -606,13 +623,22 @@
     </div>
 
     <div id="paneDetails">
-      <div class="row"><div class="label">Status</div><div class="val" id="sStatus"></div></div>
-      <div class="row" id="sPlanRow"><div class="label">Plan</div><div id="sPlan"></div></div>
+      <div id="sPlan"></div>
       <div class="row" id="sNotesRow"><div class="label">Notes</div><div class="val" id="sNotes"></div></div>
       <div class="row" id="sBookingRow"><div class="label">Booking needed</div><div class="val" id="sBooking"></div></div>
     </div>
 
     <div id="paneBookings" style="display:none;"></div>
+  </div>
+</div>
+
+<div id="dayDetailOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:500; align-items:flex-end;">
+  <div id="dayDetailSheet" style="background:var(--ink-2); border-radius:18px 18px 0 0; width:100%; max-height:85vh; overflow-y:auto; padding:22px 20px 40px;">
+    <button onclick="closeDayDetail()" style="position:absolute; top:16px; right:18px; background:none; border:none; color:var(--parchment-dim); font-size:22px; cursor:pointer; line-height:1;">✕</button>
+    <div class="handle" style="margin-bottom:16px;"></div>
+    <div id="dayDetailDate" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--parchment-dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;"></div>
+    <div id="dayDetailTitle" style="font-size:22px; font-weight:800; letter-spacing:-0.02em; margin-bottom:20px; line-height:1.2;"></div>
+    <div id="dayDetailBody"></div>
   </div>
 </div>
 
@@ -1342,83 +1368,105 @@ function switchTab(tab){
 const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-function renderPlan(plan, leg){
-  if(!plan || !plan.trim()) return '<div style="color:var(--parchment-dim); font-size:14px;">No plan added yet.</div>';
-
-  // Detect day-by-day format: lines starting with e.g. "Tue 14 Jul" or "Mon 20 Jul"
-  const dayPattern = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/;
-  const lines = plan.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
-
-  // Try to split into day blocks
-  const blocks = [];
-  let current = null;
-  lines.forEach(function(line){
-    const m = line.match(dayPattern);
-    if(m){
-      if(current) blocks.push(current);
-      current = {header: line, body: ''};
-    } else if(current){
-      current.body += (current.body ? ' ' : '') + line;
-    } else {
-      // plain text before any day header
-      blocks.push({header: null, body: line});
-    }
-  });
-  if(current) blocks.push(current);
-
-  // If no day structure detected, fall back to plain readable text
-  if(!blocks.some(function(b){ return b.header; })){
-    return '<div style="font-size:15px; line-height:1.7; color:var(--parchment);">'+plan.replace(/\n/g,'<br>')+'</div>';
-  }
-
-  const todayStr = new Date().toISOString().slice(0,10);
-  const accent = leg ? (COUNTRY_META[leg.country] || {}).accent || 'var(--amber)' : 'var(--amber)';
-
-  return blocks.map(function(block){
-    if(!block.header){
-      return '<div style="font-size:14px; color:var(--parchment-dim); margin-bottom:12px; line-height:1.65;">'+block.body+'</div>';
-    }
-    const m = block.header.match(/^(\w+)\s+(\d{1,2})\s+(\w+)(.*)/);
-    const dow = m ? m[1] : '';
-    const dayNum = m ? m[2] : '';
-    const mon = m ? m[3] : '';
-    // rest of header after date
-    const titleRaw = m ? m[4].replace(/^[\s—\-–]+/, '') : block.header;
-
-    // Detect if today
-    const monthIdx = MONTHS_SHORT.indexOf(mon);
-    let isToday = false;
-    if(monthIdx !== -1 && dayNum){
-      const cardDate = new Date(2026, monthIdx, parseInt(dayNum)).toISOString().slice(0,10);
-      isToday = (cardDate === todayStr);
-    }
-
-    const detail = block.body ? '<div class="day-card-detail">'+block.body+'</div>' : '';
-    return '<div class="day-card'+(isToday?' today':'')+'" style="--accent:'+accent+';">'
-      + '<div class="day-card-date"><div class="dc-dow">'+dow+'</div><div class="dc-day">'+dayNum+'</div><div class="dc-mon">'+mon+'</div></div>'
-      + '<div class="day-card-body">'
-        + (titleRaw ? '<div class="day-card-title">'+titleRaw+'</div>' : '')
-        + detail
-      + '</div>'
-      + '</div>';
-  }).join('');
+const EMOJI_MAP = [
+  [/arrive|arrival|land/i,'✈️'],
+  [/fly|flight|depart|airport/i,'✈️'],
+  [/train|rail|perurail/i,'🚆'],
+  [/bus|shuttle|transfer/i,'🚌'],
+  [/taxi|uber/i,'🚗'],
+  [/boat|ferry|canoe/i,'⛵'],
+  [/hike|trail|trek|climb|summit|acatenango|volcano/i,'🥾'],
+  [/world.?cup|fifa|football|soccer|semifinal|fan.?hub/i,'⚽'],
+  [/machu.?picchu|ruins|inca/i,'🏛️'],
+  [/glacier|perito/i,'🧊'],
+  [/amazon|jungle|rainforest|wildlife|piranha|caiman/i,'🌿'],
+  [/beach|surf|swim|pool/i,'🏖️'],
+  [/dinner|lunch|breakfast|ceviche|tacos|tlayud|mezcal|food|market/i,'🍽️'],
+  [/cafe|coffee|café/i,'☕'],
+  [/bar|cocktail/i,'🍷'],
+  [/museum|gallery/i,'🎨'],
+  [/park|garden/i,'🌳'],
+  [/imax|cinema|show|broadway/i,'🎬'],
+  [/spa|massage|recover/i,'💆'],
+  [/statue.?of.?liberty/i,'🗽'],
+  [/salt.?flat|uyuni/i,'⚪'],
+  [/hang.?glid/i,'🪂'],
+  [/sunrise|sunset/i,'🌅'],
+  [/shopping|souvenir/i,'🛍️'],
+  [/hotel|hostel|check.?out/i,'🏨'],
+  [/waterfall|iguaz/i,'💧'],
+  [/cable.?car|teleferico/i,'🚡'],
+];
+function autoEmoji(text){
+  for(var i=0;i<EMOJI_MAP.length;i++){ if(EMOJI_MAP[i][0].test(text)) return EMOJI_MAP[i][1]; }
+  return '•';
 }
-
+function parseDayBlocks(plan){
+  if(!plan) return [];
+  const dp = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/;
+  const lines = plan.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+  const blocks=[]; let cur=null;
+  lines.forEach(function(line){
+    const m=line.match(dp);
+    if(m){
+      if(cur) blocks.push(cur);
+      const rest=line.replace(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\d{1,2}\s+\w+\s*[—–-]\s*/,'');
+      cur={dow:m[1],day:m[2],mon:m[3],headline:rest,lines:[]};
+    } else if(cur&&line){ cur.lines.push(line); }
+  });
+  if(cur) blocks.push(cur);
+  return blocks;
+}
+function renderPlan(plan, leg){
+  const blocks=parseDayBlocks(plan);
+  if(!blocks.length){
+    if(!plan||!plan.trim()) return '<div style="color:var(--parchment-dim);font-size:14px;padding:8px 0;">No plan added yet.</div>';
+    return '<div style="font-size:15px;line-height:1.7;color:var(--parchment);">'+plan.replace(/\n/g,'<br>')+'</div>';
+  }
+  return '<div class="day-list">'+blocks.map(function(b,idx){
+    return '<div class="day-list-item" onclick="openDayDetail('+idx+',currentSheetId)">'
+      +'<div class="day-list-date">'+b.dow+'<br>'+b.day+' '+b.mon+'</div>'
+      +'<div class="day-list-headline">'+b.headline+'</div>'
+      +(b.lines.length?'<div class="day-list-chev">›</div>':'')
+      +'</div>';
+  }).join('')+'</div>';
+}
+let currentSheetId=null, currentSheetDayBlocks=[];
+function openDayDetail(idx,legId){
+  const b=currentSheetDayBlocks[idx];
+  if(!b||!b.lines.length) return;
+  document.getElementById('dayDetailDate').textContent=b.dow+' · '+b.day+' '+b.mon;
+  document.getElementById('dayDetailTitle').textContent=b.headline;
+  const allLines=[];
+  b.lines.forEach(function(ln){
+    ln.split(/\.[ ]+(?=[A-Z])/).forEach(function(p){ if(p.trim()) allLines.push(p.trim().replace(/\.$/,'')); });
+  });
+  document.getElementById('dayDetailBody').innerHTML=allLines.map(function(line){
+    return '<div class="day-bullet"><div class="day-bullet-icon">'+autoEmoji(line)+'</div><div class="day-bullet-text">'+line+'</div></div>';
+  }).join('');
+  document.getElementById('dayDetailOverlay').style.display='flex';
+}
+function closeDayDetail(){
+  document.getElementById('dayDetailOverlay').style.display='none';
+}
 function openSheet(id){
-  const d = DATA.find(function(x){ return x.id===id; });
+  const d=DATA.find(function(x){ return x.id===id; });
   if(!d) return;
-  document.getElementById('sLoc').textContent = d.loc;
-  document.getElementById('sDates').textContent = d.dates + (d.priority ? '  ·  priority: '+d.priority : '');
-  document.getElementById('sStatus').innerHTML = statusPill(d.status);
-  document.getElementById('sPlan').innerHTML = renderPlan(d.plan, d);
-  document.getElementById('sBooking').textContent = d.booking || '—';
-  document.getElementById('sBookingRow').style.display = d.booking ? 'block':'none';
-  document.getElementById('sNotes').textContent = d.notes || '';
-  document.getElementById('sNotesRow').style.display = d.notes ? 'block':'none';
-  document.getElementById('tabBookings').textContent = 'Bookings' + ((d.bookings && d.bookings.length) ? ' ('+d.bookings.length+')' : '');
+  currentSheetId=id;
+  currentSheetDayBlocks=parseDayBlocks(d.plan);
+  document.getElementById('sLoc').textContent=d.loc;
+  const days=legDays(d);
+  document.getElementById('sDates').textContent=d.dates+(days?' · '+days:'');
+  document.getElementById('sStatusPill').innerHTML=statusPill(d.status);
+  document.getElementById('sPlan').innerHTML=renderPlan(d.plan,d);
+  document.getElementById('sBooking').textContent=d.booking||'—';
+  document.getElementById('sBookingRow').style.display=d.booking?'block':'none';
+  document.getElementById('sNotes').textContent=d.notes||'';
+  document.getElementById('sNotesRow').style.display=d.notes?'block':'none';
+  document.getElementById('tabBookings').textContent='Bookings'+((d.bookings&&d.bookings.length)?' ('+d.bookings.length+')':'');
   renderBookings(d);
   switchTab('details');
-  document.getElementById('overlay').style.display = 'flex';
+  document.getElementById('overlay').style.display='flex';
 }
 document.getElementById('closeSheet').onclick = function(){ document.getElementById('overlay').style.display='none'; };
 document.getElementById('overlay').onclick = function(e){ if(e.target.id==='overlay') e.currentTarget.style.display='none'; };
