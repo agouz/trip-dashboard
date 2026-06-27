@@ -383,22 +383,22 @@
   </nav>
 
   <nav class="bottom-tab-bar" id="bottomTabBar">
-    <div class="btab active" data-tab="itinerary" onclick="navigateTo('itinerary')">
+    <div class="btab active" data-tab="itinerary" onclick="tabTap('itinerary')">
       <div class="btab-icon">🗺️</div>
       <div class="btab-label">Trip</div>
       <div class="btab-pip"></div>
     </div>
-    <div class="btab" data-tab="map" onclick="navigateTo('map')">
+    <div class="btab" data-tab="map" onclick="tabTap('map')">
       <div class="btab-icon">🌎</div>
       <div class="btab-label">Map</div>
       <div class="btab-pip"></div>
     </div>
-    <div class="btab" data-tab="diary" onclick="navigateTo('diary')">
+    <div class="btab" data-tab="diary" onclick="tabTap('diary')">
       <div class="btab-icon">📖</div>
       <div class="btab-label">Diary</div>
       <div class="btab-pip"></div>
     </div>
-    <div class="btab" data-tab="costs" onclick="navigateTo('costs')">
+    <div class="btab" data-tab="costs" onclick="tabTap('costs')">
       <div class="btab-icon">💰</div>
       <div class="btab-label">Costs</div>
       <div class="btab-pip"></div>
@@ -1910,7 +1910,20 @@ function toggleSideSection(id){
   event.stopPropagation();
   document.getElementById(id).classList.toggle('open');
 }
-let currentTab = 'itinerary';
+let lastTabTap = {tab: null, time: 0};
+function tabTap(tab){
+  const now = Date.now();
+  if(tab === currentTab && now - lastTabTap.time < 350){
+    // Double tap on active tab — reload
+    const bar = document.getElementById('pullRefreshBar');
+    if(bar){ bar.style.transform = 'scaleX(1)'; }
+    setTimeout(function(){ window.location.reload(true); }, 150);
+    lastTabTap = {tab: null, time: 0};
+    return;
+  }
+  lastTabTap = {tab: tab, time: now};
+  navigateTo(tab);
+}
 const SWIPE_TABS = ['itinerary','map','diary','costs'];
 
 function navigateTo(tab){
