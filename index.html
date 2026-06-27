@@ -89,8 +89,24 @@
   .status-bar i{width:5px; height:14px; border-radius:2px; display:block;}
   .chev{font-size:15px; color:var(--parchment-dim); transition:transform 0.2s ease;}
   .country.open .chev{transform:rotate(90deg);}
-  .country-body{display:none; padding:0 12px 14px 18px; border-top:1px solid var(--hairline);}
+  .country-body{display:none; padding:12px 14px 14px 14px; border-top:1px solid var(--hairline);}
   .country.open .country-body{display:block;}
+  .day-timeline{display:flex; flex-direction:column; position:relative;}
+  .day-timeline::before{content:''; position:absolute; left:7px; top:8px; bottom:8px; width:1px; background:var(--hairline);}
+  .day-item{display:flex; align-items:flex-start; gap:12px; padding:9px 0; position:relative;}
+  .day-item.expandable{cursor:pointer;}
+  .day-dot{width:15px; height:15px; border-radius:50%; flex-shrink:0; margin-top:2px; border:2px solid var(--ink-2); position:relative; z-index:1;}
+  .day-content{flex:1; min-width:0;}
+  .day-date{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--parchment-dim); margin-bottom:2px;}
+  .day-headline{font-size:14px; font-weight:600; line-height:1.3; color:var(--parchment);}
+  .day-confirmed .day-headline{color:var(--moss);}
+  .day-booked-chip{font-size:10px; background:rgba(107,142,99,0.2); color:var(--moss); border-radius:4px; padding:1px 5px; vertical-align:middle;}
+  .day-bk-count{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--amber); margin-top:3px; opacity:0.85;}
+  .day-chev{font-size:13px; color:var(--parchment-dim); opacity:0.5; flex-shrink:0; margin-top:3px; transition:transform 0.2s ease;}
+  .day-item.open .day-chev{transform:rotate(90deg); opacity:0.8;}
+  .day-detail{display:none; font-size:12.5px; line-height:1.65; color:var(--parchment-dim); margin-top:7px; padding:10px 12px; background:var(--ink-3); border-radius:8px; border-left:3px solid var(--accent, var(--hairline));}
+  .day-item.open .day-detail{display:block;}
+
 
   .rail-wrap{margin-bottom:16px;}
   .rail{display:flex; height:9px; border-radius:6px; overflow:hidden; gap:2px; position:relative;}
@@ -719,24 +735,69 @@ const COUNTRY_IMG = {
   Brazil:    "https://images.unsplash.com/photo-1537798518344-7ee3acb6e6d1?w=700&h=200&fit=crop&crop=center&q=80", // Rio de Janeiro sunset by Peter Conlan
 };
 
+function parseCountryDays(legs){
+  const days = [];
+  legs.forEach(function(leg){
+    if(!leg.plan){ return; }
+    const lines = leg.plan.split('\n');
+    let cur = null, details = [];
+    lines.forEach(function(line){
+      const m = line.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\d+\s+\w+(?:\s+→.*)?)\s+[—–]\s+(.+)/);
+      if(m){
+        if(cur){ cur.detail = details.join('\n').trim(); days.push(cur); }
+        cur = {weekday:m[1], date:m[2], headline:m[3], detail:'', legId:leg.id, country:leg.country, bookings: leg.bookings||[]};
+        details = [];
+      } else if(cur && line.trim()){ details.push(line.trim()); }
+    });
+    if(cur){ cur.detail = details.join('\n').trim(); days.push(cur); }
+  });
+  return days;
+}
+
+function toggleDayItem(el){ el.classList.toggle('open'); }
+
 function renderCountries(){
   const groups = groupByCountry();
   const el = document.getElementById('countries');
   el.innerHTML = groups.map(function(g,i){
-    const meta = COUNTRY_META[g.country] || {flag:"🏳️",name:g.country,accent:"#B9B2A0"};
+    const meta = COUNTRY_META[g.country] || {flag:'🏳️', name:g.country, accent:'#B9B2A0'};
     const bars = g.legs.map(function(l){ return '<i style="background:'+dotColor(l.status)+'"></i>'; }).join('');
-    const legsHtml = g.legs.map(function(l){
-      const bkCount = (l.bookings && l.bookings.length) ? l.bookings.length : 0;
-      return '<div class="leg" onclick="event.stopPropagation(); openSheet('+l.id+')">'
-        + '<div class="leg-card" style="--barcolor:'+meta.accent+'">'
-        + '<div class="leg-top"><div><div class="leg-loc">'+l.loc+'</div>'
-        + '<div class="leg-dates">'+l.dates+(legDays(l) ? ' · '+legDays(l) : '')+'</div></div>'+statusPill(l.status)+'</div>'
-        + (l.priority ? '<div class="prio mono">priority: '+l.priority+'</div>' : '')
-        + (bkCount ? '<div class="booking-badge">🧾 '+bkCount+' booking'+(bkCount>1?'s':'')+'</div>' : '')
-        + '</div></div>';
-    }).join('');
     const imgSrc = COUNTRY_IMG[g.country];
     const imgHtml = imgSrc ? '<img class="country-img" src="'+imgSrc+'" alt="'+meta.name+'" loading="lazy">' : '';
+    const days = parseCountryDays(g.legs);
+    let bodyHtml;
+    if(days.length){
+      bodyHtml = '<div class="day-timeline">'
+        + days.map(function(d){
+            const hasDetail = d.detail && d.detail.length > 0;
+            const bkHtml = d.bookings.length
+              ? '<div class="day-bk-count">🧾 '+d.bookings.length+' booking'+(d.bookings.length>1?'s':'')+'</div>'
+              : '';
+            return '<div class="day-item'+(hasDetail?' expandable':'')+(d.headline.includes('BOOKED')||d.headline.includes('booked')?' day-confirmed':'')+'" '
+              +(hasDetail ? 'onclick="toggleDayItem(this)"' : '')+'>'
+              + '<div class="day-dot" style="background:'+meta.accent+'"></div>'
+              + '<div class="day-content">'
+              + '<div class="day-date">'+d.weekday+' '+d.date+'</div>'
+              + '<div class="day-headline">'+d.headline.replace(/🎟️\s*BOOKED|BOOKED/,'').trim()
+                + (d.headline.includes('BOOKED') ? ' <span class="day-booked-chip">✓</span>' : '')
+              +'</div>'
+              + bkHtml
+              + (hasDetail ? '<div class="day-detail">'+d.detail.replace(/\n/g,'<br>')+'</div>' : '')
+              + '</div>'
+              + (hasDetail ? '<div class="day-chev">›</div>' : '')
+              + '</div>';
+          }).join('')
+        + '</div>';
+    } else {
+      // fallback: show leg list for legs without parsed days
+      bodyHtml = '<div style="padding:8px 0;">'
+        + g.legs.map(function(l){
+            return '<div style="padding:10px 0; border-bottom:1px solid var(--hairline); cursor:pointer;" onclick="openSheet('+l.id+')">'
+              + '<div style="font-size:14px; font-weight:600;">'+l.loc+'</div>'
+              + '<div class="mono" style="font-size:11px; color:var(--parchment-dim); margin-top:2px;">'+l.dates+'</div></div>';
+          }).join('')
+        + '</div>';
+    }
     return '<div class="country" id="country-'+i+'" style="--accent:'+meta.accent+'; --accent-soft:'+meta.accent+'26;">'
       + '<div class="country-head" onclick="toggleCountry('+i+')">'
       + imgHtml
@@ -746,7 +807,7 @@ function renderCountries(){
       + '<div class="country-dates mono">'+g.start+' – '+g.end+(countryTotalDays(g.legs) ? ' · '+countryTotalDays(g.legs) : '')+'</div></div>'
       + '<div class="country-status"><div class="status-bar">'+bars+'</div><div class="chev">›</div></div>'
       + '</div>'
-      + '</div><div class="country-body">'+legsHtml+'</div></div>';
+      + '</div><div class="country-body">'+bodyHtml+'</div></div>';
   }).join('');
 }
 
