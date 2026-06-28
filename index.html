@@ -75,9 +75,9 @@
   .banner .title{font-size:19px; font-weight:700; margin-bottom:4px; color:var(--parchment); letter-spacing:-0.01em;}
   .banner .meta{font-size:13px; color:var(--parchment-dim);}
 
-  #countries{display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--hairline);}
+  #countries{display:grid; grid-template-columns:1fr; gap:2px; background:var(--hairline);}
   .country{position:relative; border:none; border-radius:0; background:var(--ink-2); overflow:hidden;}
-  .country::before{content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent, var(--hairline));}
+  .country::before{display:none;}
   .country-head{cursor:pointer; overflow:hidden; border-radius:0; position:relative;}
   .country-img{width:100%; height:160px; object-fit:cover; display:block;}
   .country-head-info{display:flex; align-items:flex-end; gap:6px; padding:8px 10px; background:linear-gradient(to top, rgba(12,19,24,0.92) 0%, rgba(12,19,24,0.0) 100%); position:absolute; bottom:0; left:0; right:0;}
@@ -91,7 +91,7 @@
   .chev{font-size:15px; color:var(--parchment-dim); transition:transform 0.2s ease;}
   .country.open .chev{transform:rotate(90deg);}
   .country-body{display:none; padding:12px 0 18px 0; border-top:1px solid var(--hairline); margin:0;}
-  .country.open .country-body{display:block;} .country.open{grid-column:1/-1; border-radius:0; margin:0; border-left:none; border-right:none; background:var(--ink-2);}
+  .country.open .country-body{display:block;} .country.open{border-radius:0; margin:0; border-left:none; border-right:none; background:var(--ink-2);}
 
 
   .rail-wrap{margin-bottom:16px;}
@@ -104,7 +104,7 @@
 
   .leg{position:relative; margin-top:0; cursor:pointer; padding:0;}
   .leg-card{background:var(--ink-3); border-top:1px solid var(--hairline); border-bottom:none; border-left:none; border-right:none; border-radius:0; padding:14px 16px; position:relative; overflow:hidden;}
-  .leg-card::after{content:''; position:absolute; right:0; top:0; bottom:0; width:4px; background:var(--barcolor, var(--parchment-dim));}
+  .leg-card::before{content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--barcolor, var(--parchment-dim));}
   .leg-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
   .leg-loc{font-size:17px; font-weight:700; letter-spacing:-0.01em;}
   .leg-dates{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--parchment-dim); margin-top:4px;}
@@ -131,8 +131,9 @@
   .day-bullet:last-child{border-bottom:none;}
   .day-bullet-icon{font-size:18px; flex-shrink:0; width:24px; text-align:center; margin-top:1px;}
   .day-bullet-text{font-size:16px; line-height:1.5; color:var(--parchment); flex:1;}
-  .sheet-tab{flex:1; background:var(--ink-3); border:1px solid var(--hairline); color:var(--parchment-dim); font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; padding:10px 0; border-radius:8px; cursor:pointer; text-align:center; min-width:0;}
-  .sheet-tab.active{background:rgba(227,163,59,0.14); border-color:var(--amber); color:var(--amber);}
+  .sheet-tab{flex:1; background:var(--ink-3); border:none; border-top:1px solid var(--hairline); border-right:1px solid var(--hairline); color:var(--parchment-dim); font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; padding:12px 0; border-radius:0; cursor:pointer; text-align:center; min-width:0;}
+  .sheet-tab:last-child{border-right:none;}
+  .sheet-tab.active{background:var(--ink-2); border-top:2px solid var(--amber); color:var(--amber);}
   .bk-item{background:var(--ink-3); border-top:1px solid var(--hairline); border-radius:0; padding:11px 16px; margin-bottom:0;}
   .bk-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
   .bk-title{font-size:16px; font-weight:700; display:flex; gap:7px; align-items:flex-start; line-height:1.35;}
@@ -157,9 +158,10 @@
   #sheet .handle{width:36px; height:4px; background:var(--hairline); border-radius:4px; margin:0 auto 14px;}
   #sheet h2{font-size:23px; margin:0 0 3px; font-weight:800; letter-spacing:-0.02em;}
   #sheet .dates{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--parchment-dim); margin-bottom:16px;}
-  #sheet .row{margin-bottom:12px;}
+  #sheet .row{margin-bottom:12px; padding:0 16px;}
   #sheet .row .label{font-family:'IBM Plex Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--amber); margin-bottom:5px;}
   #sheet .row .val{font-size:15.5px; line-height:1.65; color:var(--parchment);}
+  #sPlan{padding:14px 16px 2px;}
   #sheet .close{position:absolute; top:14px; right:16px; background:none; border:none; color:var(--parchment-dim); font-size:20.5px; cursor:pointer;}
   .day-card{display:flex; gap:11px; margin-bottom:10px; align-items:flex-start;}
   .day-card-date{flex-shrink:0; width:44px; text-align:center; padding-top:2px;}
@@ -597,9 +599,9 @@
 
 <div id="overlay">
   <div id="sheet">
-    <div style="position:sticky; top:0; background:var(--ink-2); z-index:1; border-radius:18px 18px 0 0; border-bottom:1px solid var(--hairline); box-shadow:0 4px 12px rgba(0,0,0,0.25);">
+    <div style="position:sticky; top:0; background:var(--ink-2); z-index:1; border-radius:0; border-bottom:1px solid var(--hairline); box-shadow:0 4px 12px rgba(0,0,0,0.25);">
       <div class="handle"></div>
-      <div style="display:flex; align-items:flex-start; justify-content:space-between; padding:4px 18px 10px;">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; padding:4px 16px 10px;">
         <div style="flex:1; min-width:0;">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px;">
             <h2 id="sLoc" style="margin:0; font-size:23px; font-weight:800; letter-spacing:-0.02em;"></h2>
@@ -609,19 +611,19 @@
         </div>
         <button id="closeSheet" onclick="closeSheet()" style="margin-left:12px; margin-top:2px; background:var(--ink-3); border:1px solid var(--hairline); color:var(--parchment-dim); font-size:18px; width:34px; height:34px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;">✕</button>
       </div>
-      <div class="sheet-tabs" style="display:flex; width:100%; padding:0 18px 14px;">
+      <div class="sheet-tabs" style="display:flex; width:100%; padding:0;">
         <button class="sheet-tab active" id="tabDetails" onclick="switchTab('details')">Details</button>
         <button class="sheet-tab" id="tabBookings" onclick="switchTab('bookings')">Bookings</button>
       </div>
     </div>
 
-    <div id="paneDetails" style="padding:0 18px calc(90px + env(safe-area-inset-bottom));">
+    <div id="paneDetails" style="padding:0 0 calc(90px + env(safe-area-inset-bottom));">
       <div id="sPlan"></div>
       <div class="row" id="sNotesRow"><div class="label">Notes</div><div class="val" id="sNotes"></div></div>
       <div class="row" id="sBookingRow"><div class="label">Booking needed</div><div class="val" id="sBooking"></div></div>
     </div>
 
-    <div id="paneBookings" style="display:none; padding:0 18px calc(90px + env(safe-area-inset-bottom));"></div>
+    <div id="paneBookings" style="display:none; padding:0 0 calc(90px + env(safe-area-inset-bottom));">
   </div>
 </div>
 
