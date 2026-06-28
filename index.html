@@ -153,7 +153,7 @@
   .fd-hero-dur{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--parchment-dim); margin-top:2px; white-space:nowrap;}
 
   #overlay{position:fixed; inset:0; background:rgba(10,15,19,0.6); display:none; align-items:flex-end; z-index:50;}
-  #sheet{background:var(--ink-2); width:100%; max-width:520px; margin:0 auto; border-radius:18px 18px 0 0; padding:0; border-top:1px solid var(--hairline); max-height:88vh; overflow-y:auto; position:relative; -webkit-overflow-scrolling:touch;}
+  #sheet{background:var(--ink-2); width:100%; max-width:520px; margin:0 auto; border-radius:18px 18px 0 0; padding:0; border-top:1px solid var(--hairline); max-height:88vh; overflow-y:scroll; position:relative; -webkit-overflow-scrolling:touch;}
   #sheet .handle{width:36px; height:4px; background:var(--hairline); border-radius:4px; margin:0 auto 14px;}
   #sheet h2{font-size:23px; margin:0 0 3px; font-weight:800; letter-spacing:-0.02em;}
   #sheet .dates{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--parchment-dim); margin-bottom:16px;}
@@ -628,13 +628,13 @@
       </div>
     </div>
 
-    <div id="paneDetails" style="padding:0 18px 24px;">
+    <div id="paneDetails" style="padding:0 18px calc(90px + env(safe-area-inset-bottom));">
       <div id="sPlan"></div>
       <div class="row" id="sNotesRow"><div class="label">Notes</div><div class="val" id="sNotes"></div></div>
       <div class="row" id="sBookingRow"><div class="label">Booking needed</div><div class="val" id="sBooking"></div></div>
     </div>
 
-    <div id="paneBookings" style="display:none; padding:0 18px 24px;"></div>
+    <div id="paneBookings" style="display:none; padding:0 18px calc(90px + env(safe-area-inset-bottom));"></div>
   </div>
 </div>
 
@@ -647,7 +647,7 @@
       </div>
       <button onclick="closeDayDetail()" style="background:var(--ink-3); border:1px solid var(--hairline); color:var(--parchment-dim); font-size:18px; width:34px; height:34px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-left:12px;">✕</button>
     </div>
-    <div id="dayDetailBody" style="padding:8px 20px 0;"></div>
+    <div id="dayDetailBody" style="padding:8px 20px calc(90px + env(safe-area-inset-bottom));"></div>
   </div>
 </div>
 
