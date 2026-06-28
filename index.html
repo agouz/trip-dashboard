@@ -79,15 +79,15 @@
   .country{position:relative; border:none; border-radius:0; background:var(--ink-2); overflow:hidden;}
   .country::before{display:none;}
   .country-head{cursor:pointer; overflow:hidden; border-radius:0; position:relative;}
-  .country-img{width:100%; height:160px; object-fit:cover; display:block;}
-  .country-head-info{display:flex; align-items:flex-end; gap:6px; padding:8px 10px; background:linear-gradient(to top, rgba(12,19,24,0.92) 0%, rgba(12,19,24,0.0) 100%); position:absolute; bottom:0; left:0; right:0;}
-  .country-flag{font-size:20.5px; line-height:1; width:36px; height:36px; border-radius:4px; display:flex; align-items:center; justify-content:center; background:var(--accent-soft, var(--ink-3)); border:1px solid var(--accent, var(--hairline)); flex-shrink:0;}
-  .country-main{flex:1; min-width:0;}
-  .country-name{font-size:14px; font-weight:800; text-shadow:0 1px 4px rgba(0,0,0,0.9); letter-spacing:-0.01em; line-height:1.2;}
-  .country-dates{font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.8); margin-top:1px; text-shadow:0 1px 4px rgba(0,0,0,0.9);}
-  .country-status{display:flex; align-items:center; gap:8px; flex-shrink:0;}
-  .status-bar{display:flex; gap:2px;}
-  .status-bar i{width:5px; height:14px; border-radius:2px; display:block;}
+  .country-strip{display:flex; align-items:center; padding:12px 14px; background:var(--accent); gap:12px;}
+  .country-strip-flag{font-size:28px; line-height:1; flex-shrink:0; filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3));}
+  .country-strip-info{flex:1; min-width:0;}
+  .country-strip-name{font-size:20px; font-weight:800; color:#fff; line-height:1.1; letter-spacing:-0.025em; text-shadow:0 1px 4px rgba(0,0,0,0.25);}
+  .country-strip-days{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:rgba(255,255,255,0.72); margin-top:3px; letter-spacing:0.04em;}
+  .country-strip-dates{font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.82); text-align:right; flex-shrink:0; line-height:1.6; letter-spacing:0.03em;}
+  .country-strip-chev{font-size:18px; color:rgba(255,255,255,0.5); margin-left:6px; flex-shrink:0; transition:transform 0.2s; display:inline-block;}
+  .country.open .country-strip-chev{transform:rotate(90deg);}
+  .country-img{width:100%; height:180px; object-fit:cover; display:block;}
   .chev{font-size:15px; color:var(--parchment-dim); transition:transform 0.2s ease;}
   .country.open .chev{transform:rotate(90deg);}
   .country-body{display:none; padding:12px 0 18px 0; border-top:1px solid var(--hairline); margin:0;}
@@ -778,13 +778,16 @@ function renderCountries(){
     }).join('');
     return '<div class="country" id="country-'+i+'" style="--accent:'+meta.accent+'; --accent-soft:'+meta.accent+'26;">'
       + '<div class="country-head" onclick="toggleCountry('+i+')">'
-      + imgHtml
-      + '<div class="country-head-info">'
-      + '<div class="country-flag">'+meta.flag+'</div>'
-      + '<div class="country-main"><div class="country-name">'+meta.name+'</div>'
-      + '<div class="country-dates mono">'+g.start+' – '+g.end+(countryTotalDays(g.legs) ? ' · '+countryTotalDays(g.legs) : '')+'</div></div>'
-      + '<div class="country-status"><div class="status-bar">'+bars+'</div></div>'
+      + '<div class="country-strip">'
+      + '<div class="country-strip-flag">'+meta.flag+'</div>'
+      + '<div class="country-strip-info">'
+      + '<div class="country-strip-name">'+meta.name+'</div>'
+      + (countryTotalDays(g.legs) ? '<div class="country-strip-days">'+countryTotalDays(g.legs)+'</div>' : '')
       + '</div>'
+      + '<div class="country-strip-dates">'+g.start+'<br>'+g.end+'</div>'
+      + '<div class="country-strip-chev">›</div>'
+      + '</div>'
+      + imgHtml
       + '</div><div class="country-body">'+legsHtml+'</div></div>';
   }).join('');
 }
