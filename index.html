@@ -42,14 +42,13 @@
   .trip-name{font-size:24px; font-weight:900; letter-spacing:-0.03em; color:var(--amber); font-family:'Fraunces',serif; font-style:italic;}
   .hamburger-btn{width:40px; height:40px; border-radius:9px; background:var(--ink-2); border:1px solid var(--hairline); color:var(--parchment); font-size:18px; display:flex; align-items:center; justify-content:center; cursor:pointer;}
 
-  .bottom-tab-bar{position:relative; flex-shrink:0; background:var(--ink-2); border-top:1px solid var(--hairline); display:flex; align-items:center; justify-content:space-around; z-index:10; padding-bottom:env(safe-area-inset-bottom); height:calc(64px + env(safe-area-inset-bottom));}
-  .btab{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px 0; cursor:pointer; color:var(--parchment-dim); transition:color 0.15s ease; -webkit-tap-highlight-color:transparent; min-width:0;}
-  .btab.active{color:var(--amber); position:relative;}
-  .btab.active::before{content:''; position:absolute; top:0; left:20%; right:20%; height:2px; background:var(--amber); border-radius:0 0 2px 2px;}
-  .btab-icon{font-size:28px; line-height:1;}
-  .btab-label{font-size:11px; font-weight:600; letter-spacing:0.02em; white-space:nowrap;}
-  .btab-pip{width:4px; height:4px; border-radius:50%; background:transparent; margin-top:1px;}
-  .btab.active .btab-pip{background:var(--amber);}
+  .bottom-tab-bar{position:relative; flex-shrink:0; background:var(--ink-2); border-top:1px solid var(--hairline); display:flex; align-items:center; justify-content:space-around; z-index:10; padding-bottom:env(safe-area-inset-bottom); height:calc(62px + env(safe-area-inset-bottom));}
+  .btab{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0; cursor:pointer; color:rgba(242,232,208,0.35); transition:color 0.18s ease; -webkit-tap-highlight-color:transparent; min-width:0; position:relative;}
+  .btab svg{width:26px; height:26px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; transition:transform 0.15s cubic-bezier(0.34,1.56,0.64,1);}
+  .btab-pill{position:absolute; inset:auto; width:52px; height:32px; border-radius:16px; background:transparent; transition:background 0.18s ease; pointer-events:none; top:50%; transform:translateY(-50%);}
+  .btab.active{color:var(--amber);}
+  .btab.active .btab-pill{background:rgba(212,168,71,0.14);}
+  .btab.active svg{transform:scale(1.08);}
  opacity:0; pointer-events:none; transition:opacity 0.22s ease;}
   .side-nav-overlay.open{opacity:1; pointer-events:auto;}
   .side-nav{position:fixed; top:0; left:0; bottom:0; width:78%; max-width:300px; background:var(--ink-2); border-right:1px solid var(--hairline); z-index:200; transform:translateX(-105%); transition:transform 0.25s ease; padding:18px 14px; display:flex; flex-direction:column; box-shadow:8px 0 28px rgba(0,0,0,0.4);}
@@ -453,23 +452,35 @@
   </div><!-- /mainContent -->
 
   <nav class="bottom-tab-bar" id="bottomTabBar">
+    <!-- Map -->
     <div class="btab" data-tab="map" onclick="tabTap('map')">
-      <div class="btab-icon">🌎</div>
+      <div class="btab-pill"></div>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
     </div>
+    <!-- Diary -->
     <div class="btab" data-tab="diary" onclick="tabTap('diary')">
-      <div class="btab-icon">📖</div>
+      <div class="btab-pill"></div>
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
     </div>
+    <!-- Itinerary (home) -->
     <div class="btab active" data-tab="itinerary" onclick="tabTap('itinerary')">
-      <div class="btab-icon">🗺️</div>
+      <div class="btab-pill"></div>
+      <svg viewBox="0 0 24 24"><path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7z"/><path d="M9 4v13M15 7v13"/></svg>
     </div>
+    <!-- Costs -->
     <div class="btab" data-tab="costs" onclick="tabTap('costs')">
-      <div class="btab-icon">💰</div>
+      <div class="btab-pill"></div>
+      <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/></svg>
     </div>
-    <div class="btab" onclick="if(confirm('Hard reset — reload fresh?')){window.location.href=window.location.href.split('?')[0]+'?r='+Date.now();}" title="Hard reset">
-      <div class="btab-icon">⚡</div>
+    <!-- Reset -->
+    <div class="btab" onclick="if(confirm('Hard reset — reload fresh?')){window.location.href=window.location.href.split('?')[0]+'?r='+Date.now();}">
+      <div class="btab-pill"></div>
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
     </div>
+    <!-- More -->
     <div class="btab" onclick="toggleSideNav()">
-      <div class="btab-icon">☰</div>
+      <div class="btab-pill"></div>
+      <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
     </div>
   </nav>
   <div id="tab-visas" style="display:none;"></div>
