@@ -377,7 +377,7 @@
 <div id="app" style="display:none;">
   <header class="top" style="border-bottom:none; margin-bottom:8px; padding-bottom:0;">
     <div style="width:40px;"></div>
-    <div style="font-size:13px; font-weight:700; color:var(--parchment-dim); opacity:0.5; letter-spacing:0.02em;">🦇 Dark Knight Travels</div>
+    <div style="font-size:13px; font-weight:700; color:var(--parchment-dim); opacity:0.5; letter-spacing:0.02em; cursor:pointer;" onclick="window.location.reload(true)">🦇 Dark Knight Travels</div>
     <div style="width:40px;"></div>
   </header>
 
@@ -605,6 +605,8 @@
     <button class="add-save-btn" onclick="submitAddModal()">Save</button>
   </div>
 </div>
+
+<div id="bgBlocker" style="display:none; position:fixed; inset:0; z-index:45;"></div>
 
 <div id="overlay">
   <div id="sheet">
@@ -877,14 +879,14 @@ function openDiaryModal(){
   document.querySelectorAll('.diary-mood-btn').forEach(function(b){ b.classList.remove('selected'); });
   document.getElementById('diaryPhotoPreviews').innerHTML = '';
   updateDiaryLocPreview(today);
+  document.getElementById('bgBlocker').style.display='block';
   document.getElementById('diaryModalOverlay').classList.add('open');
-  lockScroll();
 }
 function closeDiaryModal(){
   pendingDiaryPhotos.forEach(function(p){ if(p) URL.revokeObjectURL(p.objectUrl); });
   pendingDiaryPhotos = [];
   document.getElementById('diaryModalOverlay').classList.remove('open');
-  unlockScroll();
+  document.getElementById('bgBlocker').style.display='none';
 }
 function selectMood(btn, mood){
   selectedMood = (selectedMood === mood) ? '' : mood;
@@ -1476,12 +1478,13 @@ function openSheet(id){
   document.getElementById('tabBookings').textContent='Bookings'+((d.bookings&&d.bookings.length)?' ('+d.bookings.length+')':'');
   renderBookings(d);
   switchTab('details');
+  document.getElementById('bgBlocker').style.display='block';
   document.getElementById('overlay').style.display='flex';
-  lockScroll();
 }
 document.getElementById('overlay').onclick = function(e){
   if(e.target.id==='overlay'){ closeSheet(); }
 };
+document.getElementById('diaryModalOverlay').addEventListener('click', function(e){ if(e.target===this){ closeDiaryModal(); document.getElementById('bgBlocker').style.display='none'; } });
 
 /* ============ COSTS ============ */
 const ICON_CATEGORY = {"🏨":"Accommodation","✈️":"Flights","🎟️":"Activities & Tours","🚆":"Transport","🚌":"Transport","🚐":"Transport","🚗":"Transport","📄":"Documents & Health","💊":"Documents & Health"};
@@ -1970,21 +1973,11 @@ function toggleSideSection(id){
   document.getElementById(id).classList.toggle('open');
 }
 let _lockScrollY = 0;
-function lockScroll(){
-  _lockScrollY = window.scrollY;
-  document.body.style.position='fixed';
-  document.body.style.top='-'+_lockScrollY+'px';
-  document.body.style.width='100%';
-}
-function unlockScroll(){
-  document.body.style.position='';
-  document.body.style.top='';
-  document.body.style.width='';
-  window.scrollTo(0,_lockScrollY);
-}
+function lockScroll(){ /* no-op — background scroll prevented by bgBlocker overlay */ }
+function unlockScroll(){ /* no-op */ }
 function closeSheet(){
   document.getElementById('overlay').style.display='none';
-  unlockScroll();
+  document.getElementById('bgBlocker').style.display='none';
 }
 
 let lastTabTap = {tab: null, time: 0};
