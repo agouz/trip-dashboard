@@ -394,7 +394,6 @@
   </nav>
 
   <nav class="bottom-tab-bar" id="bottomTabBar">
-    <div style="font-size:14px; font-weight:800; color:var(--amber); letter-spacing:-0.01em; padding-left:16px; flex:2; cursor:pointer; white-space:nowrap;" onclick="window.location.reload(true)">🦇 Dark Knight</div>
     <div class="btab" data-tab="map" onclick="tabTap('map')">
       <div class="btab-icon">🌎</div>
     </div>
@@ -409,6 +408,9 @@
     </div>
     <div class="btab" onclick="openSideNav()">
       <div class="btab-icon">☰</div>
+    </div>
+    <div class="btab" onclick="if(confirm('Hard reset — reload fresh?')){window.location.href=window.location.href.split('?')[0]+'?r='+Date.now();}" title="Hard reset">
+      <div class="btab-icon">↺</div>
     </div>
   </nav>
 
@@ -1930,6 +1932,7 @@ async function addCostEntry(cat, amount, country, note){
 
 /* ============ MAIN TABS + COUNTDOWN ============ */
 const MAIN_TABS = ['itinerary','map','calendar','diary','costs','prep','health','visas','other'];
+let currentTab = 'itinerary';
 function showMainTab(tab){
   MAIN_TABS.forEach(function(t){
     const sec = document.getElementById('tab-'+t);
