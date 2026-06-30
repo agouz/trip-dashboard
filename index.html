@@ -680,9 +680,9 @@ let GENERAL_COSTS = [];
 
 async function loadData(){
   try{
-    const legs = await sb('legs?select=*&order=sort_order.asc');
-    const bookingsRaw = await sb('bookings?select=*');
-    const flightDetailsRaw = await sb('flight_details?select=*');
+    const legs = await sb('trip_legs?select=*&order=sort_order.asc');
+    const bookingsRaw = await sb('trip_bookings?select=*');
+    const flightDetailsRaw = await sb('trip_flight_details?select=*');
     const fdByBooking = {};
     flightDetailsRaw.forEach(function(fd){ fdByBooking[fd.booking_id] = fd; });
 
@@ -965,7 +965,7 @@ async function saveDiaryEntry(){
   saveBtn.textContent = 'Saving…'; saveBtn.disabled = true;
   const leg = getLegForDate(dateStr);
   try{
-    const inserted = await sb('diary_entries', {
+    const inserted = await sb('trip_diary_entries', {
       method:'POST', headers:{'Prefer':'return=representation'},
       body: JSON.stringify({entry_date:dateStr, leg_id:leg?leg.id:null, title:title||null, body:body, mood:selectedMood||null, photos:[]})
     });
@@ -977,7 +977,7 @@ async function saveDiaryEntry(){
       photos.push(await uploadDiaryPhoto(valid[i].file, entry.id));
     }
     if(photos.length){
-      await sb('diary_entries?id=eq.'+entry.id, {method:'PATCH', headers:{'Prefer':'return=representation'}, body:JSON.stringify({photos:photos})});
+      await sb('trip_diary_entries?id=eq.'+entry.id, {method:'PATCH', headers:{'Prefer':'return=representation'}, body:JSON.stringify({photos:photos})});
       entry.photos = photos;
     }
     DIARY_ENTRIES.unshift(entry);
@@ -991,7 +991,7 @@ async function saveDiaryEntry(){
 }
 
 async function loadDiary(){
-  DIARY_ENTRIES = await sb('diary_entries?select=*&order=entry_date.desc') || [];
+  DIARY_ENTRIES = await sb('trip_diary_entries?select=*&order=entry_date.desc') || [];
 }
 
 function renderDiary(){
@@ -1723,13 +1723,13 @@ let PACKING = [];
 
 async function loadPrep(){
   try{
-    PREP_TASKS = await sb('prep_tasks?select=*&order=id.asc');
+    PREP_TASKS = await sb('trip_prep_tasks?select=*&order=id.asc');
   }catch(e){
     showSaveStatus('error loading tasks: ' + e.message);
     PREP_TASKS = [];
   }
   try{
-    PACKING = await sb('packing_items?select=*&order=id.asc');
+    PACKING = await sb('trip_packing_items?select=*&order=id.asc');
   }catch(e){
     showSaveStatus('error loading packing: ' + e.message);
     PACKING = [];
@@ -1766,7 +1766,7 @@ async function toggleTask(id){
   t.checked = newVal;
   renderPrep();
   try{
-    await sb('prep_tasks?id=eq.'+id, {method:'PATCH', body: JSON.stringify({checked:newVal})});
+    await sb('trip_prep_tasks?id=eq.'+id, {method:'PATCH', body: JSON.stringify({checked:newVal})});
     showSaveStatus('synced'); lastFailedSave = null;
   }catch(e){
     t.checked = !newVal; renderPrep();
@@ -1781,7 +1781,7 @@ async function togglePack(id){
   p.checked = newVal;
   renderPrep();
   try{
-    await sb('packing_items?id=eq.'+id, {method:'PATCH', body: JSON.stringify({checked:newVal})});
+    await sb('trip_packing_items?id=eq.'+id, {method:'PATCH', body: JSON.stringify({checked:newVal})});
     showSaveStatus('synced'); lastFailedSave = null;
   }catch(e){
     p.checked = !newVal; renderPrep();
@@ -1794,7 +1794,7 @@ async function deletePack(id){
   PACKING = PACKING.filter(function(x){ return x.id!==id; });
   renderPrep();
   try{
-    await sb('packing_items?id=eq.'+id, {method:'DELETE'});
+    await sb('trip_packing_items?id=eq.'+id, {method:'DELETE'});
     showSaveStatus('synced'); lastFailedSave = null;
   }catch(e){
     PACKING = backup; renderPrep();
@@ -1805,7 +1805,7 @@ async function deletePack(id){
 async function addPackItem(category, text){
   if(!text || !text.trim()) return false;
   try{
-    const inserted = await sb('packing_items', {
+    const inserted = await sb('trip_packing_items', {
       method:'POST',
       headers:{'Prefer':'return=representation'},
       body: JSON.stringify({category: category, text: text.trim(), checked:false})
@@ -1821,7 +1821,7 @@ async function addPackItem(category, text){
 async function addPrepTask(text){
   if(!text || !text.trim()) return false;
   try{
-    const inserted = await sb('prep_tasks', {
+    const inserted = await sb('trip_prep_tasks', {
       method:'POST',
       headers:{'Prefer':'return=representation'},
       body: JSON.stringify({text: text.trim(), checked:false})
@@ -1941,7 +1941,7 @@ async function addCostEntry(cat, amount, country, note){
   const title = (note && note.trim()) ? note.trim() : (catName + ' expense');
   const costStr = '$' + amt.toLocaleString('en-AU', {minimumFractionDigits: (amt % 1 !== 0) ? 2 : 0, maximumFractionDigits:2});
   try{
-    const inserted = await sb('bookings', {
+    const inserted = await sb('trip_bookings', {
       method:'POST',
       headers:{'Prefer':'return=representation'},
       body: JSON.stringify({leg_id: legId, cat: cat, title: title, cost: costStr, status:'paid', note: (note && note.trim()) ? note.trim() : null})
