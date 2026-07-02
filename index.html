@@ -2037,11 +2037,13 @@ function navigateTo(tab){
 (function(){
   let sx = 0, sy = 0, pulling = false;
   const bar = document.getElementById('pullRefreshBar');
+  const scroller = document.getElementById('mainContent');
 
   document.addEventListener('touchstart', function(e){
     sx = e.touches[0].clientX;
     sy = e.touches[0].clientY;
-    pulling = window.scrollY === 0;
+    const scrollTop = scroller ? scroller.scrollTop : window.scrollY;
+    pulling = scrollTop === 0;
   }, {passive:true});
 
   document.addEventListener('touchmove', function(e){
@@ -2060,7 +2062,7 @@ function navigateTo(tab){
     bar.style.transform = 'scaleX(0)';
 
     // Pull-to-refresh: pulled down 90px+ from top, more vertical than horizontal
-    if(pulling && dy > 90 && Math.abs(dy) > Math.abs(dx) * 1.5 && window.scrollY === 0){
+    if(pulling && dy > 90 && Math.abs(dy) > Math.abs(dx) * 1.5 && (scroller ? scroller.scrollTop : window.scrollY) === 0){
       bar.style.transform = 'scaleX(1)';
       setTimeout(function(){ window.location.reload(true); }, 120);
       return;
