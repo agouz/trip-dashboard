@@ -1946,7 +1946,9 @@ async function submitAddModal(){
     ok = await addCostEntry(cat, amount, country, note);
   }
   if(ok){
-    window.location.reload();
+    closeAddModal();
+    if(addModalType === 'prep' || addModalType === 'packing') renderPrep();
+    else if(addModalType === 'cost') renderCosts();
   }
 }
 async function addCostEntry(cat, amount, country, note){
