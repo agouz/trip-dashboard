@@ -357,6 +357,18 @@
 
   /* AUTH GATE */
   #authGate{position:fixed; inset:0; background:radial-gradient(ellipse 120% 70% at 50% 0%, #1d2a35 0%, #0c1318 55%, #060a0d 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; z-index:100; text-align:center; overflow:hidden;}
+
+  /* ── Loading overlay ── */
+  #loadingOverlay{position:fixed;inset:0;background:#060a0d;z-index:99;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;overflow:hidden;}
+  #loadingOverlay.on{display:flex;}
+  .lo-label{font-family:'Fraunces',serif;font-size:15px;color:rgba(200,180,140,.6);letter-spacing:.08em;text-transform:uppercase;z-index:1;}
+  .lo-dots{display:flex;gap:6px;z-index:1;}
+  .lo-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:lodot 1.2s ease-in-out infinite;}
+  .lo-dot:nth-child(2){animation-delay:.2s;}
+  .lo-dot:nth-child(3){animation-delay:.4s;}
+  @keyframes lodot{0%,80%,100%{opacity:.2;transform:scale(.8);}40%{opacity:1;transform:scale(1.2);}}
+  .fall-emoji{position:absolute;top:-60px;font-size:28px;animation:fall linear infinite;will-change:transform,opacity;user-select:none;pointer-events:none;}
+  @keyframes fall{0%{transform:translateY(0) rotate(0deg);opacity:0;}8%{opacity:1;}85%{opacity:.9;}100%{transform:translateY(110vh) rotate(360deg);opacity:0;}}
   .bat-spot{position:absolute; top:-180px; left:50%; transform:translateX(-50%); width:560px; height:560px; border-radius:50%; background:radial-gradient(circle, rgba(227,163,59,0.22) 0%, rgba(227,163,59,0.06) 45%, transparent 70%); pointer-events:none;}
   .bat-mark{width:96px; height:96px; margin:0 auto 18px; position:relative; z-index:1; opacity:0.95;}
   .bat-eyebrow{font-family:'Fira Code',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.18em; color:var(--amber); margin-bottom:10px; position:relative; z-index:1;}
@@ -378,6 +390,11 @@
   <div id="authGateContent">
     <div class="auth-spinner" id="authSpinner"></div>
   </div>
+</div>
+
+<div id="loadingOverlay">
+  <div class="lo-label">Loading your adventure</div>
+  <div class="lo-dots"><div class="lo-dot"></div><div class="lo-dot"></div><div class="lo-dot"></div></div>
 </div>
 
 <div id="pullRefreshBar" style="position:fixed;top:0;left:0;right:0;height:3px;background:var(--amber);transform:scaleX(0);transform-origin:left;transition:transform 0.1s;z-index:999;pointer-events:none;"></div>
@@ -2212,7 +2229,9 @@ async function checkAuthAndInit(){
 
   document.getElementById('authGate').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
+  showLoadingOverlay();
   await initDashboard();
+  hideLoadingOverlay();
 }
 
 authClient.auth.onAuthStateChange(function(event, session){
@@ -2220,6 +2239,27 @@ authClient.auth.onAuthStateChange(function(event, session){
     checkAuthAndInit();
   }
 });
+
+function showLoadingOverlay(){
+  const ov=document.getElementById('loadingOverlay');
+  ov.classList.add('on');
+  const EMOJIS=['🇺🇸','🇲🇽','🇬🇹','🇵🇪','🇧🇴','🇦🇷','🇧🇷','✈️','🌎','🗺️','🏔️','🌴','🌊','🎒','📸','🦜','🦋','⛵','🚂','🏖️'];
+  const frag=document.createDocumentFragment();
+  for(let i=0;i<28;i++){
+    const el=document.createElement('span');
+    el.className='fall-emoji';
+    el.textContent=EMOJIS[i%EMOJIS.length];
+    el.style.cssText='left:'+(Math.random()*100)+'%;font-size:'+(20+Math.random()*18)+'px;animation-duration:'+(3+Math.random()*5)+'s;animation-delay:'+(Math.random()*6)+'s;';
+    frag.appendChild(el);
+  }
+  ov.appendChild(frag);
+}
+function hideLoadingOverlay(){
+  const ov=document.getElementById('loadingOverlay');
+  ov.style.transition='opacity .4s ease';
+  ov.style.opacity='0';
+  setTimeout(function(){ov.classList.remove('on');ov.style.opacity='';ov.style.transition='';ov.querySelectorAll('.fall-emoji').forEach(function(e){e.remove();});},420);
+}
 
 checkAuthAndInit();
 </script>
