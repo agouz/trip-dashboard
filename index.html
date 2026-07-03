@@ -915,6 +915,9 @@ let DIARY_ENTRIES = [];
 let selectedMood = '';
 let DIARY_RENDERED = false;
 let pendingDiaryPhotos = [];
+let diaryMode = 'entry';
+let selectedRating = 0;
+let selectedCategories = new Set();
 
 function getLegForDate(dateStr){
   return DATA.find(function(d){
@@ -1000,10 +1003,6 @@ function closeLightbox(){
   document.getElementById('diaryLightbox').style.display = 'none';
   document.getElementById('diaryLightboxImg').src = '';
 }
-
-let diaryMode = 'entry';
-let selectedRating = 0;
-let selectedCategories = new Set();
 
 function setDiaryMode(mode){
   diaryMode = mode;
