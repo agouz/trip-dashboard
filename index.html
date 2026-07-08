@@ -2026,24 +2026,29 @@ function switchAddType(type){
 }
 async function submitAddModal(){
   let ok = false;
-  if(addModalType === 'packing'){
-    const cat = document.getElementById('addPackCatInput').value;
-    const text = document.getElementById('addPackTextInput').value;
-    ok = await addPackItem(cat, text);
-  }else if(addModalType === 'prep'){
-    const text = document.getElementById('addPrepTextInput').value;
-    ok = await addPrepTask(text);
-  }else if(addModalType === 'cost'){
-    const cat = document.getElementById('addCostCatInput').value;
-    const amount = document.getElementById('addCostAmountInput').value;
-    const country = document.getElementById('addCostCountryInput').value;
-    const note = document.getElementById('addCostNoteInput').value;
-    ok = await addCostEntry(cat, amount, country, note);
-  }
-  if(ok){
-    closeAddModal();
-    if(addModalType === 'prep' || addModalType === 'packing') renderPrep();
-    else if(addModalType === 'cost') renderCosts();
+  try{
+    if(addModalType === 'packing'){
+      const cat = document.getElementById('addPackCatInput').value;
+      const text = document.getElementById('addPackTextInput').value;
+      ok = await addPackItem(cat, text);
+    }else if(addModalType === 'prep'){
+      const text = document.getElementById('addPrepTextInput').value;
+      ok = await addPrepTask(text);
+    }else if(addModalType === 'cost'){
+      const cat = document.getElementById('addCostCatInput').value;
+      const amount = document.getElementById('addCostAmountInput').value;
+      const country = document.getElementById('addCostCountryInput').value;
+      const note = document.getElementById('addCostNoteInput').value;
+      ok = await addCostEntry(cat, amount, country, note);
+    }
+    if(ok){
+      closeAddModal();
+      if(addModalType === 'prep' || addModalType === 'packing') renderPrep();
+      else if(addModalType === 'cost') renderCosts();
+    }
+  }catch(err){
+    console.error('submitAddModal error:', err);
+    alert('Error saving: ' + err.message);
   }
 }
 async function addCostEntry(cat, amount, country, note){
