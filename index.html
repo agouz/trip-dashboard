@@ -1980,14 +1980,14 @@ function renderPrep(){
 
   el.innerHTML =
     '<div class="misc open" id="misc-prep-tasks">'
-      + '<div class="misc-head" onclick="toggleMisc2(\'misc-prep-tasks\')"><div class="misc-icon">✅</div><div class="misc-name">Before you go</div><div class="chev">›</div></div>'
+      + '<div class="misc-head" onclick="toggleMisc2(\'misc-prep-tasks\')"><div class="misc-icon">✅</div><div class="misc-name">Action items</div><div class="chev">›</div></div>'
       + '<div class="misc-body">'
         + '<div class="prep-progress">'+doneTasks+' / '+PREP_TASKS.length+' done</div>'
         + taskHtml
         + toggleDoneHtml
       + '</div>'
     + '</div>'
-    + '<div class="misc open" id="misc-prep-packing">'
+    + '<div class="misc" id="misc-prep-packing">'
       + '<div class="misc-head" onclick="toggleMisc2(\'misc-prep-packing\')"><div class="misc-icon">🧳</div><div class="misc-name">Packing list</div><div class="chev">›</div></div>'
       + '<div class="misc-body">'
         + '<div class="prep-progress">'+donePack+' / '+PACKING.length+' packed</div>'
