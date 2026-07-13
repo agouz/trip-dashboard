@@ -365,6 +365,8 @@
   .add-field input, .add-field select{width:100%; background:var(--ink-3); border:1px solid var(--hairline); color:var(--parchment); border-radius:8px; padding:11px 12px; font-family:'Figtree',sans-serif; font-size:16px;}
   .add-save-btn{width:100%; background:var(--amber); color:var(--ink); border:none; border-radius:10px; padding:13px 0; font-weight:700; font-size:16px; cursor:pointer; margin-top:6px;}
   .prep-progress{font-family:'Fira Code',monospace; font-size:12.5px; color:var(--parchment-dim); text-align:right; margin-bottom:8px;}
+  .show-done-toggle{font-family:'Fira Code',monospace; font-size:12px; color:var(--jade); text-align:center; padding:10px 0 4px; cursor:pointer; text-transform:uppercase; letter-spacing:0.06em; opacity:0.8; transition:opacity 0.15s;}
+  .show-done-toggle:active{opacity:0.5;}
 
   /* AUTH GATE */
   #authGate{position:fixed; inset:0; background:radial-gradient(ellipse 120% 70% at 50% 0%, #1d2a35 0%, #0c1318 55%, #060a0d 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; z-index:100; text-align:center; overflow:hidden;}
@@ -1950,12 +1952,16 @@ async function addPrepTask(text){
 function renderPrep(){
   const el = document.getElementById('tab-prep');
   const doneTasks = PREP_TASKS.filter(function(t){ return t.checked; }).length;
-  const taskHtml = PREP_TASKS.map(function(t){
+  const visibleTasks = showDonePrep ? PREP_TASKS : PREP_TASKS.filter(function(t){ return !t.checked; });
+  const taskHtml = visibleTasks.map(function(t){
     return '<div class="chk-row">'
       + '<div class="chk-box'+(t.checked?' checked':'')+'" onclick="toggleTask('+t.id+')">'+(t.checked?'✓':'')+'</div>'
       + '<div class="chk-text'+(t.checked?' checked':'')+'">'+t.text+'</div>'
     + '</div>';
   }).join('');
+  const toggleDoneHtml = doneTasks > 0
+    ? '<div class="show-done-toggle" onclick="toggleShowDonePrep()">'+(showDonePrep ? 'Hide '+doneTasks+' completed' : 'Show '+doneTasks+' completed')+'</div>'
+    : '';
 
   const cats = [];
   PACKING.forEach(function(p){ if(cats.indexOf(p.category)===-1) cats.push(p.category); });
@@ -1978,6 +1984,7 @@ function renderPrep(){
       + '<div class="misc-body">'
         + '<div class="prep-progress">'+doneTasks+' / '+PREP_TASKS.length+' done</div>'
         + taskHtml
+        + toggleDoneHtml
       + '</div>'
     + '</div>'
     + '<div class="misc open" id="misc-prep-packing">'
@@ -1989,6 +1996,8 @@ function renderPrep(){
     + '</div>';
 }
 function toggleMisc2(id){ document.getElementById(id).classList.toggle('open'); }
+let showDonePrep = false;
+function toggleShowDonePrep(){ showDonePrep = !showDonePrep; renderPrep(); }
 
 let addModalType = 'packing';
 function openAddModal(defaultType){
