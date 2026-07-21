@@ -1439,9 +1439,10 @@ function bkStatusPill(s){
   return '<span class="pill reserved">reserved</span>';
 }
 
+const DAILY_SPEND_CATS = ['🚗 Transport','🍔 Eating','🛒 Groceries','💪 Fitness','🎷 Entertainment','🎭 Entertainment','💆 Personal care','🛍️ Other'];
 function renderBookings(d){
   const pane = document.getElementById('paneBookings');
-  const list = d.bookings || [];
+  const list = (d.bookings || []).filter(function(b){ return DAILY_SPEND_CATS.indexOf(b.cat) === -1; });
   if(!list.length){
     pane.innerHTML = '<div class="bk-empty">Nothing booked here yet.</div>';
     return;
