@@ -645,6 +645,7 @@
           <option value="Bolivia">🇧🇴 Bolivia</option>
           <option value="Argentina">🇦🇷 Argentina</option>
           <option value="Brazil">🇧🇷 Brazil</option>
+          <option value="Chile">🇨🇱 Chile</option>
           <option value="General">📋 General</option>
         </select>
       </div>
@@ -712,6 +713,7 @@ const COUNTRY_META = {
   Bolivia:{flag:"🇧🇴",name:"Bolivia",accent:"#3FB8B0"},
   Argentina:{flag:"🇦🇷",name:"Argentina",accent:"#5C9BD9"},
   Brazil:{flag:"🇧🇷",name:"Brazil",accent:"#7FBF4D"},
+  Chile:{flag:"🇨🇱",name:"Chile",accent:"#B45C6E"},
 };
 
 const PRIO_RANK = {"\ud83d\udea8 High":1,"\ud83d\udfe1 Medium":2,"\ud83d\udfe2 Low":3,"\ud83d\udfe2 watch":3.5,null:4};
@@ -813,6 +815,7 @@ const COUNTRY_IMG = {
   Bolivia:   "https://images.unsplash.com/photo-1528161498624-89b0174b714d?w=700&h=200&fit=crop&crop=center&q=80", // Uyuni mirror sky by B
   Argentina: "https://images.unsplash.com/photo-1656856747603-1777348793e6?w=700&h=200&fit=crop&crop=center&q=80", // Iguazú Falls panoramic by Nadine Marfurt
   Brazil:    "https://images.unsplash.com/photo-1537798518344-7ee3acb6e6d1?w=700&h=200&fit=crop&crop=center&q=80", // Rio de Janeiro sunset by Peter Conlan
+  Chile:     "https://images.unsplash.com/photo-1544963151-4295c9d7c9b3?w=700&h=200&fit=crop&crop=center&q=80", // Santiago city with Andes backdrop
 };
 
 
@@ -1200,7 +1203,7 @@ function toggleCountry(i){
   document.getElementById('country-'+i).classList.toggle('open');
 }
 
-const COUNTRY_ISO = {"840":"USA","484":"Mexico","320":"Guatemala","604":"Peru","068":"Bolivia","032":"Argentina","076":"Brazil","076":"Brazil"};
+const COUNTRY_ISO = {"840":"USA","484":"Mexico","320":"Guatemala","604":"Peru","068":"Bolivia","032":"Argentina","076":"Brazil","152":"Chile"};
 let MAP_ZOOM = null, MAP_SVG = null, MAP_G = null, MAP_K0 = 1.8;
 
 async function renderMap(){
@@ -1700,7 +1703,7 @@ function renderCosts(){
       + '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%"></div></div></div>';
   }).join('');
 
-  const countryOrder = ["USA","Mexico","Guatemala","Peru","Bolivia","Argentina","Brazil","General"];
+  const countryOrder = ["USA","Mexico","Guatemala","Peru","Bolivia","Brazil","Argentina","Chile","General"];
   const countryHtml = countryOrder.filter(function(c){ return byCountry[c]; }).map(function(c){
     const meta = COUNTRY_META[c] || {flag:"📋",name:c,accent:"#B9B2A0"};
     return '<div class="country-cost-row" onclick="showCostDetail(\'country\',\''+c+'\')"><div class="ccr-left"><div class="ccr-dot" style="background:'+meta.accent+';"></div><div class="ccr-flag">'+meta.flag+'</div><div class="ccr-name">'+meta.name+'</div></div>'
@@ -1745,6 +1748,7 @@ function renderVisas(){
     + card('Peru', 'Australian passport — visa on arrival. No pre-approval needed.', 'done', '✅ No visa needed', '#6B8E63')
     + card('Bolivia', 'Australian passport — visa on arrival. No pre-approval needed.', 'done', '✅ No visa needed', '#6B8E63')
     + card('Argentina', 'Australian passport — visa on arrival. No pre-approval needed.', 'done', '✅ No visa needed', '#6B8E63')
+    + card('Chile', 'Australian passport — visa-free entry. No pre-approval needed. Entering via Hito Cajón land border (Bolivia salt flats tour) and exiting via Santiago airport.', 'done', '✅ No visa needed', '#6B8E63')
     + card('Mexico', 'Australian passport — visa on arrival. No pre-approval needed.', 'done', '✅ No visa needed', '#6B8E63')
     + '<div class="info-section-head">Offline Documents to Carry</div>'
     + card('Must have offline', 'Passport photo page · ESTA approval · All flight confirmations · All accommodation confirmations · Car rental (Hertz) · Travel insurance certificate · IDP (International Driving Permit) · Machu Picchu ticket · PeruRail tickets · Brazil eVisa', 'pending', '📋 Save before departure', '#4D7A95')
