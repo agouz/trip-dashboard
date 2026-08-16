@@ -213,6 +213,18 @@
   .today-simple-label{font-size:12px; text-transform:uppercase; letter-spacing:0.1em; color:var(--parchment-dim); margin-bottom:14px;}
   .today-simple-context{font-size:14px; color:var(--parchment-dim); margin-top:12px; line-height:1.6;}
 
+  /* ---- Lessons ---- */
+  .lesson-filters{display:flex; gap:8px; padding:0 16px 16px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+  .lesson-filters::-webkit-scrollbar{display:none;}
+  .lesson-chip{flex-shrink:0; background:var(--ink-3); color:var(--parchment-dim); border:1px solid var(--hairline); border-radius:20px; padding:7px 13px; font-family:'Figtree',sans-serif; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;}
+  .lesson-chip.active{background:rgba(224,169,59,0.15); color:var(--amber); border-color:rgba(224,169,59,0.5);}
+  .lesson-chip-n{opacity:0.55; font-family:'Fira Code',monospace; font-size:11px; margin-left:2px;}
+  .lesson-entry .diary-entry-body{-webkit-line-clamp:2;}
+  .lesson-entry.expanded .diary-entry-body{-webkit-line-clamp:unset;}
+  .lesson-evidence{margin-top:11px; padding:11px 12px; background:rgba(255,255,255,0.03); border-radius:9px; font-size:13px; line-height:1.65; color:var(--parchment-dim); display:none;}
+  .lesson-entry.expanded .lesson-evidence{display:block;}
+  .lesson-evidence-label{display:block; font-family:'Fira Code',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.09em; color:var(--entry-accent); margin-bottom:5px;}
+
   /* ---- Diary ---- */
   .diary-header{margin-bottom:20px; padding:0 16px;}
   .diary-title-row{display:flex; align-items:flex-start; justify-content:space-between; gap:12px;}
@@ -465,12 +477,12 @@
     <div class="diary-header">
       <div class="diary-title-row">
         <div>
-          <div class="diary-heading">Travel Diary</div>
+          <div class="diary-heading">Lessons Learned</div>
           <div class="diary-subheading mono" id="diarySubheading">Loading…</div>
         </div>
-        <button class="diary-add-btn" onclick="openDiaryModal()">+ New Entry</button>
       </div>
     </div>
+    <div id="lessonFilters" class="lesson-filters"></div>
     <div id="diaryEntries"></div>
   </div>
 
@@ -488,10 +500,10 @@
       <div class="btab-pill"></div>
       <svg viewBox="0 0 24 24"><path d="M4 7h16M4 7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2M4 7l2-3h12l2 3M9 12h6"/></svg>
     </div>
-    <!-- Diary -->
+    <!-- Lessons -->
     <div class="btab" data-tab="diary" onclick="tabTap('diary')">
       <div class="btab-pill"></div>
-      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M9 21h6M10 21v-3.5a5.5 5.5 0 1 1 4 0V21"/><path d="M12 2v1M4.2 6.2l.7.7M2 14h1M21 14h1M19.1 6.9l.7-.7"/></svg>
     </div>
     <!-- Itinerary (home) -->
     <div class="btab active" data-tab="itinerary" onclick="tabTap('itinerary')">
@@ -925,6 +937,7 @@ function renderCalendar(){
 
 // ===== DIARY =====
 let DIARY_ENTRIES = [];
+let LESSONS = [];
 let selectedMood = '';
 let DIARY_RENDERED = false;
 let pendingDiaryPhotos = [];
@@ -1108,49 +1121,70 @@ async function saveDiaryEntry(){
 
 async function loadDiary(){
   DIARY_ENTRIES = await sb('trip_diary_entries?select=*&order=entry_date.desc') || [];
+  LESSONS = await sb('trip_lessons?select=*&order=id.asc') || [];
 }
+
+let LESSON_FILTER = 'All';
 
 function renderDiary(){
   const el = document.getElementById('diaryEntries');
   const sub = document.getElementById('diarySubheading');
-  if(sub) sub.textContent = DIARY_ENTRIES.length + (DIARY_ENTRIES.length===1?' entry':' entries') + ' · Dark Knight Travels';
-  if(!DIARY_ENTRIES.length){
-    el.innerHTML = '<div class="diary-empty"><div class="diary-empty-icon">✍️</div><div class="diary-empty-title">No entries yet</div><div class="diary-empty-sub">Start writing when the trip begins — or add pre-trip thoughts now. Every entry gets saved here and can help you build a trip diary later.</div></div>';
+  const filterEl = document.getElementById('lessonFilters');
+  const all = LESSONS || [];
+  if(sub) sub.textContent = all.length + (all.length===1?' lesson':' lessons') + ' \u00b7 carry these to the next trip';
+
+  if(!all.length){
+    if(filterEl) filterEl.innerHTML = '';
+    el.innerHTML = '<div class="diary-empty"><div class="diary-empty-icon">\ud83e\udde0</div><div class="diary-empty-title">No lessons yet</div><div class="diary-empty-sub">Gotchas, rules and hard-won knowledge get collected here as the trip goes on.</div></div>';
     return;
   }
-  const groups = {};
-  DIARY_ENTRIES.forEach(function(e){
-    const d = new Date(e.entry_date+'T12:00:00');
-    const key = d.toLocaleDateString('en-AU',{month:'long',year:'numeric'});
-    if(!groups[key]) groups[key]=[];
-    groups[key].push(e);
-  });
-  el.innerHTML = Object.keys(groups).map(function(month){
-    const entries = groups[month].map(function(e){
-      const leg = DATA.find(function(d){ return d.id===e.leg_id; });
-      const meta = leg && COUNTRY_META[leg.country] ? COUNTRY_META[leg.country] : null;
-      const accent = meta ? meta.accent : '#B9B2A0';
-      const d = new Date(e.entry_date+'T12:00:00');
-      const dateLabel = d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
-      const locLabel = leg ? leg.loc : (e.entry_date<'2026-07-14'?'Sydney · Pre-trip':'');
-      const photos = (e.photos && e.photos.length) ? e.photos : [];
-      const photoStrip = photos.length ? '<div class="diary-card-photos">'+photos.map(function(p){
-        const url = getDiaryPhotoUrl(p);
-        return '<img class="diary-card-photo" src="'+url+'" loading="lazy" onclick="event.stopPropagation();openLightbox(\"'+url+'\")">'; 
-      }).join('')+'</div>' : '';
-      return '<div class="diary-entry" style="--entry-accent:'+accent+';--entry-accent-soft:'+accent+'1A;--entry-accent-border:'+accent+'55;" onclick="this.classList.toggle(&apos;expanded&apos;)">'
-        +'<div class="diary-entry-top"><span class="diary-entry-date">'+dateLabel+'</span>'
-        +(locLabel?'<span class="diary-entry-loc">'+locLabel+'</span>':'')
-        +(e.type==='review' && e.rating ? '<span class="diary-entry-mood">'+Array(e.rating).fill('⭐').join('')+'</span>' : (e.mood?'<span class="diary-entry-mood">'+e.mood+'</span>':''))
-        +'</div>'
-        +(e.title?'<div class="diary-entry-title">'+e.title+'</div>':'')
-        +'<div class="diary-entry-body">'+e.body.replace(/\n/g,'<br>')+'</div>'
-        +(e.categories && e.categories.length ? '<div style="margin-top:8px;font-size:11px;color:var(--parchment-dim);">'+e.categories.join(' ')+'</div>' : '')
-        +photoStrip+'</div>';
+
+  const cats = [];
+  all.forEach(function(l){ if(cats.indexOf(l.category)===-1) cats.push(l.category); });
+
+  if(filterEl){
+    filterEl.innerHTML = ['All'].concat(cats).map(function(c){
+      const n = c==='All' ? all.length : all.filter(function(l){return l.category===c;}).length;
+      return '<button class="lesson-chip'+(LESSON_FILTER===c?' active':'')+'" onclick="setLessonFilter(\''+c.replace(/'/g,"\\'")+'\')">'+c+' <span class="lesson-chip-n">'+n+'</span></button>';
     }).join('');
-    return '<div class="diary-month-group"><div class="diary-month-label">'+month+'</div>'+entries+'</div>';
+  }
+
+  const shown = LESSON_FILTER==='All' ? all : all.filter(function(l){ return l.category===LESSON_FILTER; });
+  const groups = {};
+  shown.forEach(function(l){ if(!groups[l.category]) groups[l.category]=[]; groups[l.category].push(l); });
+
+  el.innerHTML = Object.keys(groups).map(function(cat){
+    const accent = LESSON_ACCENT[cat] || '#B9B2A0';
+    const items = groups[cat].map(function(l){
+      return '<div class="diary-entry lesson-entry" style="--entry-accent:'+accent+';--entry-accent-soft:'+accent+'1A;--entry-accent-border:'+accent+'55;" onclick="this.classList.toggle(&apos;expanded&apos;)">'
+        +'<div class="diary-entry-top">'
+        +(l.leg?'<span class="diary-entry-loc">'+esc(l.leg)+'</span>':'<span></span>')
+        +'</div>'
+        +'<div class="diary-entry-title">'+esc(l.title)+'</div>'
+        +'<div class="diary-entry-body">'+esc(l.lesson)+'</div>'
+        +(l.evidence?'<div class="lesson-evidence"><span class="lesson-evidence-label">What happened</span>'+esc(l.evidence)+'</div>':'')
+        +'</div>';
+    }).join('');
+    return '<div class="diary-month-group"><div class="diary-month-label" style="color:'+accent+'">'+esc(cat)+'</div>'+items+'</div>';
   }).join('');
 }
+
+function setLessonFilter(c){ LESSON_FILTER = c; renderDiary(); }
+
+function esc(t){
+  return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+const LESSON_ACCENT = {
+  'Booking':'#E0A93B',
+  'Tours':'#D9714B',
+  'Hiking':'#5FA876',
+  'Health':'#C1463F',
+  'Money':'#3FB8B0',
+  'Logistics':'#5C9BD9',
+  'Personal':'#7FBF4D',
+  'Working with Claude':'#B45C6E'
+};
 
 function renderTodayCard(){
   const el = document.getElementById('todayCard');
