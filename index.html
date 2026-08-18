@@ -82,6 +82,10 @@
 
   #countries{display:grid; grid-template-columns:1fr; gap:2px; background:var(--hairline);}
   .country{position:relative; border:none; border-radius:0; background:var(--ink-2); overflow:hidden;}
+  .country.current{box-shadow:0 0 0 2px var(--accent) inset;}
+  .country-here-tag{display:inline-block; font-size:10px; font-weight:800; letter-spacing:0.06em; background:rgba(255,255,255,0.22); color:#fff; padding:2px 7px; border-radius:20px; vertical-align:middle; margin-left:6px;}
+  .leg-current .leg-card{background:var(--accent-soft, var(--ink-3));}
+  .leg-here-badge{display:inline-block; font-size:10px; font-weight:800; letter-spacing:0.06em; color:var(--accent); border:1px solid var(--accent); padding:2px 8px; border-radius:20px; margin-bottom:8px;}
   .country::before{display:none;}
   .country-head{cursor:pointer; overflow:hidden; border-radius:0; position:relative;}
   .country-strip{display:flex; align-items:center; padding:14px 14px 12px; background:var(--accent); gap:12px; background-image:linear-gradient(135deg,rgba(0,0,0,0.18) 0%,rgba(0,0,0,0.0) 60%);}
@@ -164,6 +168,11 @@
   #sheet h2{font-size:23px; margin:0 0 3px; font-weight:800; letter-spacing:-0.02em;}
   #sheet .dates{font-family:'Fira Code',monospace; font-size:13px; color:var(--parchment-dim); margin-bottom:16px;}
   #sheet .row{margin-bottom:12px; padding:0 16px;}
+  .notes-line{font-size:14.5px; line-height:1.6; color:var(--parchment); margin-bottom:8px;}
+  .notes-label{display:inline-block; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; padding:3px 9px; border-radius:20px; margin:6px 0 6px;}
+  .notes-chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+  .notes-chip{font-size:12.5px; background:var(--ink-3); border:1px solid var(--hairline); color:var(--parchment); padding:4px 10px; border-radius:8px; line-height:1.3;}
+  .notes-divider{height:1px; background:var(--hairline); margin:10px 0;}
   #sheet .row .label{font-family:'Fira Code',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--amber); margin-bottom:5px;}
   #sheet .row .val{font-size:15.5px; line-height:1.65; color:var(--parchment);}
   #sPlan{padding:14px 16px 2px;}
@@ -840,35 +849,43 @@ function getReviewBadgeForLeg(legId){
   return '<div class="city-review-badge">'+stars+' · '+reviews.length+' review'+(reviews.length>1?'s':'')+'</div>';
 }
 
+let hasScrolledToCurrentCountry = false;
 function renderCountries(){
   const groups = groupByCountry();
   const el = document.getElementById('countries');
+  const todayStr = new Date().toISOString().slice(0,10);
+  const currentLeg = DATA.find(function(d){ return d.start_date && d.end_date && todayStr>=d.start_date && todayStr<=d.end_date; });
+  let currentGroupIdx = -1;
   el.innerHTML = groups.map(function(g,i){
     const meta = COUNTRY_META[g.country] || {flag:'🏳️', name:g.country, accent:'#B9B2A0'};
     const bars = g.legs.map(function(l){ return '<i style="background:'+dotColor(l.status)+'"></i>'; }).join('');
     const imgSrc = COUNTRY_IMG[g.country];
     const imgHtml = imgSrc ? '<img class="country-img" src="'+imgSrc+'" alt="'+meta.name+'" loading="lazy">' : '';
+    const isCurrentCountry = !!(currentLeg && g.legs.some(function(l){ return l.id===currentLeg.id; }));
+    if(isCurrentCountry) currentGroupIdx = i;
     const legsHtml = g.legs.map(function(l){
       const bkCount = (l.bookings && l.bookings.length) ? l.bookings.length : 0;
+      const isCurrentLeg = !!(currentLeg && l.id===currentLeg.id);
       // Extract first meaningful activity line from plan
       const planLines = l.plan ? l.plan.split('\n').filter(function(ln){
         return ln.trim() && !ln.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/) && ln.length > 10;
       }) : [];
       const preview = planLines[0] ? planLines[0].slice(0,80) + (planLines[0].length > 80 ? '…' : '') : '';
-      return '<div class="leg" onclick="event.stopPropagation(); openSheet('+l.id+')">'
+      return '<div class="leg'+(isCurrentLeg?' leg-current':'')+'" onclick="event.stopPropagation(); openSheet('+l.id+')">'
         + '<div class="leg-card" style="--barcolor:'+meta.accent+'">'
+        + (isCurrentLeg ? '<div class="leg-here-badge">📍 YOU ARE HERE</div>' : '')
         + '<div class="leg-top"><div><div class="leg-loc">'+l.loc+'</div>'
         + '<div class="leg-dates">'+l.dates+(legDays(l) ? ' · '+legDays(l) : '')+'</div></div>'+statusPill(l.status)+'</div>'
         + (bkCount ? '<div class="leg-bk-row"><div class="leg-bk-dot"></div><div class="leg-bk-label">'+bkCount+' booking'+(bkCount>1?'s':'')+' confirmed</div></div>' : '')
         + getReviewBadgeForLeg(l.id)
         + '</div></div>';
     }).join('');
-    return '<div class="country" id="country-'+i+'" style="--accent:'+meta.accent+'; --accent-soft:'+meta.accent+'26; animation-delay:'+(i*0.08)+'s;">'
+    return '<div class="country'+(isCurrentCountry?' current open':'')+'" id="country-'+i+'" style="--accent:'+meta.accent+'; --accent-soft:'+meta.accent+'26; animation-delay:'+(i*0.08)+'s;">'
       + '<div class="country-head" onclick="toggleCountry('+i+')">'
       + '<div class="country-strip">'
       + '<div class="country-strip-flag">'+meta.flag+'</div>'
       + '<div class="country-strip-info">'
-      + '<div class="country-strip-name">'+meta.name+'</div>'
+      + '<div class="country-strip-name">'+meta.name+(isCurrentCountry?' <span class="country-here-tag">📍 CURRENT</span>':'')+'</div>'
       + (countryTotalDays(g.legs) ? '<div class="country-strip-days">'+countryTotalDays(g.legs)+'</div>' : '')
       + '</div>'
       + '<div class="country-strip-dates">'+g.start+'<br>'+g.end+'</div>'
@@ -876,6 +893,13 @@ function renderCountries(){
       + imgHtml
       + '</div><div class="country-body">'+legsHtml+'</div></div>';
   }).join('');
+  if(currentGroupIdx>-1 && !hasScrolledToCurrentCountry){
+    hasScrolledToCurrentCountry = true;
+    setTimeout(function(){
+      const targetEl = document.getElementById('country-'+currentGroupIdx);
+      if(targetEl) targetEl.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 350);
+  }
 }
 
 function renderCalendar(){
@@ -1597,6 +1621,32 @@ function parseDayBlocks(plan){
   if(cur) blocks.push(cur);
   return blocks;
 }
+function notesLabelColor(label){
+  const L = label.toUpperCase();
+  if(L.indexOf('AVOID')>-1 || L.indexOf('SKIP')>-1 || L.indexOf('DO NOT')>-1) return '#D9776B';
+  if(L.indexOf('SHORTLIST')>-1 || L.indexOf('MUST INCLUDE')>-1 || L.indexOf('RECOMMEND')>-1 || L.indexOf('MUST')>-1) return '#6FBF8B';
+  return '#D6B34E';
+}
+function renderNotes(notes){
+  if(!notes || !notes.trim()) return '';
+  const paras = notes.split(/\n\s*\n/);
+  return paras.map(function(para){
+    const lines = para.split('\n').filter(function(l){ return l.trim(); });
+    return lines.map(function(line){
+      const m = line.match(/^([A-Za-z][A-Za-z \/]{2,34})(\s*\([^)]*\))?:\s*(.*)$/);
+      if(m && m[1]===m[1].toUpperCase()){
+        const label = m[1].trim();
+        const paren = m[2] ? m[2].trim() : '';
+        const rest = m[3].trim();
+        const color = notesLabelColor(label);
+        const items = rest.split(/,\s*(?![^()]*\))/).map(function(s){ return s.trim(); }).filter(Boolean);
+        return '<div class="notes-label" style="background:'+color+'20;color:'+color+';border:1px solid '+color+'55;">'+label+(paren?' <span style="opacity:0.75;font-weight:500;">'+paren+'</span>':'')+'</div>'
+          + '<div class="notes-chips">'+items.map(function(it){ return '<span class="notes-chip">'+it+'</span>'; }).join('')+'</div>';
+      }
+      return '<div class="notes-line">'+line+'</div>';
+    }).join('');
+  }).join('<div class="notes-divider"></div>');
+}
 function renderPlan(plan, leg){
   const blocks=parseDayBlocks(plan);
   if(!blocks.length){
@@ -1642,7 +1692,7 @@ function openSheet(id){
   document.getElementById('sPlan').innerHTML=renderPlan(d.plan,d);
   document.getElementById('sBooking').textContent=d.booking||'—';
   document.getElementById('sBookingRow').style.display=d.booking?'block':'none';
-  document.getElementById('sNotes').textContent=d.notes||'';
+  document.getElementById('sNotes').innerHTML=renderNotes(d.notes);
   document.getElementById('sNotesRow').style.display=d.notes?'block':'none';
   document.getElementById('tabBookings').textContent='Bookings'+((d.bookings&&d.bookings.length)?' ('+d.bookings.length+')':'');
   renderBookings(d);
