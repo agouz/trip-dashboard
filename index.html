@@ -407,6 +407,7 @@
     <div class="side-nav-item" data-tab="calendar" onclick="navigateTo('calendar')"><span class="sn-ic">📅</span> Calendar</div>
     <div class="side-nav-item" data-tab="health" onclick="navigateTo('health')"><span class="sn-ic">💉</span> Health</div>
     <div class="side-nav-item" data-tab="visas" onclick="navigateTo('visas')"><span class="sn-ic">🛂</span> Visas</div>
+    <a class="side-nav-item" href="https://agouz.github.io/bat-cave/" style="text-decoration:none;"><span class="sn-ic">🦇</span> Bat Cave</a>
     <div class="side-nav-spacer"></div>
     <div class="side-nav-item logout" onclick="doLogout()"><span class="sn-ic">🚪</span> Log out</div>
   </nav>
@@ -1551,7 +1552,8 @@ function renderOther(){
     if(!groups[r.section]){ groups[r.section] = {icon:r.icon, name:r.section, items:[]}; order.push(r.section); }
     groups[r.section].items.push(r);
   });
-  el.innerHTML = order.map(function(k,i){
+  const caveLink = '<a class="misc" href="https://agouz.github.io/bat-cave/" style="display:block;text-decoration:none;color:inherit;"><div class="misc-head"><div class="misc-icon">\u{1F987}</div><div class="misc-name">Back to the Bat Cave</div><div class="chev">›</div></div></a>';
+  el.innerHTML = caveLink + order.map(function(k,i){
     const s = groups[k];
     const items = s.items.map(function(it){
       return '<div class="misc-item"><div class="mi-label">'+escHtml(it.label)+'</div>'+escHtml(it.val)+'</div>';
